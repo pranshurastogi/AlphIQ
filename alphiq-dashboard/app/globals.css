@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 10% 11%;
+    --foreground: 0 0% 88%;
+    --card: 220 10% 13%;
+    --card-foreground: 0 0% 88%;
+    --popover: 220 10% 13%;
+    --popover-foreground: 0 0% 88%;
+    --primary: 14 100% 70%;
+    --primary-foreground: 220 10% 11%;
+    --secondary: 220 10% 16%;
+    --secondary-foreground: 0 0% 88%;
+    --muted: 220 10% 16%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 220 10% 16%;
+    --accent-foreground: 0 0% 88%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 10% 20%;
+    --input: 220 10% 20%;
+    --ring: 14 100% 70%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-charcoal text-neutral font-sans;
+  }
+}
+
+.gauge-progress {
+  stroke-dasharray: 0 251.2;
+  animation: gauge-fill 2s ease-out forwards;
+}
+
+@keyframes gauge-fill {
+  to {
+    stroke-dasharray: var(--progress) 251.2;
+  }
+}
