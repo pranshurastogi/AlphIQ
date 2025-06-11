@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { AlephiumConnectButton } from "@alephium/web3-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -92,10 +93,8 @@ export default function AlphIQDashboard() {
             </div>
 
             {/* Wallet Connect */}
-            <Button className="bg-amber hover:bg-amber/90 text-charcoal font-medium">
-              <Wallet className="w-4 h-4 mr-2" />
-              0x123...abc
-            </Button>
+           
+            <AlephiumConnectButton className="bg-amber hover:bg-amber/90 text-charcoal font-medium flex items-center px-4 py-2 rounded" />
           </div>
         </div>
       </header>
