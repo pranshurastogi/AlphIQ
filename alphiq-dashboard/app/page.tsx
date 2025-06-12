@@ -4,8 +4,8 @@ import { useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { AlephiumConnectButton } from "@alephium/web3-react"
 import { LiveStats } from '@/components/LiveStats'
+import { WalletProfiler } from '@/components/WalletProfiler'
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -73,44 +73,13 @@ export default function AlphIQDashboard() {
             <div className="col-span-12 lg:col-span-3 space-y-6">
             <LiveStats />
             </div>
+            
             {/* Wallet Profiler */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-amber flex items-center">
-                  <Wallet className="w-5 h-5 mr-2" />
-                  Wallet Profiler
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="text-sm text-neutral/70">Balance</div>
-                  <div className="text-2xl font-bold text-amber">1,847.32 ALPH</div>
-                </div>
-                <Separator className="bg-white/10" />
-                <div className="space-y-3">
-                  <div className="text-sm font-medium text-neutral/80">Recent Transactions</div>
-                  {recentTransactions.map((tx, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center space-x-2">
-                        {tx.type === "out" ? (
-                          <ArrowUpRight className="w-4 h-4 text-red-400" />
-                        ) : (
-                          <ArrowDownLeft className="w-4 h-4 text-mint" />
-                        )}
-                        <span className="text-neutral/70">{tx.address}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-medium ${tx.type === "out" ? "text-red-400" : "text-mint"}`}>
-                          {tx.type === "out" ? "-" : "+"}
-                          {tx.amount} ALPH
-                        </div>
-                        <div className="text-xs text-neutral/50">{tx.timestamp}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            
+            <div className="col-span-12 lg:col-span-3 space-y-6">
+                <WalletProfiler />
+                {/* …other cards */}
+            </div>
 
             {/* Token Flow Analyzer */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
