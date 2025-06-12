@@ -1,9 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AlephiumConnectButton } from "@alephium/web3-react"
+import { useNetworkStats } from "@/hooks/useNetworkStats"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -53,8 +55,10 @@ const missions = [
 ]
 
 export default function AlphIQDashboard() {
-  const [viewMode, setViewMode] = useState<"analytics" | "score">("analytics")
   const [contractId, setContractId] = useState("")
+  const { stats, isLoading, isError } = useNetworkStats()
+  // console.log('[AlphIQDashboard] stats:', stats, 'isLoading:', isLoading, 'isError:', isError)
+
 
   return (
     <div className="min-h-screen bg-charcoal text-neutral">
@@ -72,29 +76,25 @@ export default function AlphIQDashboard() {
 
             {/* Toggle Switch */}
             <div className="flex items-center space-x-4 bg-white/5 rounded-lg p-1">
-              <Button
-                variant={viewMode === "analytics" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("analytics")}
-                className={`${viewMode === "analytics" ? "bg-amber text-charcoal" : "text-neutral hover:text-amber"}`}
-              >
-                <Activity className="w-4 h-4 mr-2" />
-                Analytics View
-              </Button>
-              <Button
-                variant={viewMode === "score" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("score")}
-                className={`${viewMode === "score" ? "bg-amber text-charcoal" : "text-neutral hover:text-amber"}`}
-              >
-                <Trophy className="w-4 h-4 mr-2" />
-                Onchain Score View
-              </Button>
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="text-neutral hover:text-amber">
+                  <Activity className="w-4 h-4 mr-2" />
+                  Analytics View
+                </Button>
+              </Link>
+              <Link href="/onchain-score">
+                <Button variant="ghost" size="sm" className="text-neutral hover:text-amber">
+                  <Trophy className="w-4 h-4 mr-2" />
+                  Onchain Score View
+                </Button>
+              </Link>
             </div>
 
             {/* Wallet Connect */}
-           
-            <AlephiumConnectButton className="bg-amber hover:bg-amber/90 text-charcoal font-medium flex items-center px-4 py-2 rounded" />
+            <AlephiumConnectButton className="bg-amber hover:bg-amber/90 text-charcoal font-medium flex items-center px-4 py-2 rounded">
+              <Wallet className="w-4 h-4 mr-2" />
+              {/* Button will auto-display connected address */}
+            </AlephiumConnectButton>
           </div>
         </div>
       </header>
@@ -105,29 +105,43 @@ export default function AlphIQDashboard() {
           <div className="col-span-12 lg:col-span-3 space-y-6">
             {/* Live Network Stats */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-mint flex items-center">
-                  <Activity className="w-5 h-5 mr-2" />
-                  Live Network Stats
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral/70 text-sm">TPS</span>
-                    <span className="text-mint text-xl font-bold animate-pulse-glow">1,247</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral/70 text-sm">Gas Usage</span>
-                    <span className="text-mint text-xl font-bold">78%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral/70 text-sm">Block Time</span>
-                    <span className="text-mint text-xl font-bold">16s</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+  <CardHeader className="pb-3">
+    <CardTitle className="text-mint flex items-center">
+      <Activity className="w-5 h-5 mr-2" />
+      Live Network Stats
+    </CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    {/* Only show error if stats didn't load at all */}
+    {isError && !stats ? (
+      <div className="text-red-400 text-center">Failed to load stats</div>
+    ) : (
+      <div className="space-y-3">
+        {/* TPS */}
+        <div className="flex justify-between items-center">
+          <span className="text-neutral/70 text-sm">TPS</span>
+          <span className="text-mint text-xl font-bold animate-pulse-glow">
+            {isLoading ? '—' : stats!.tps.toLocaleString()}
+          </span>
+        </div>
+        {/* Hashrate */}
+        <div className="flex justify-between items-center">
+          <span className="text-neutral/70 text-sm">Hashrate</span>
+          <span className="text-mint text-xl font-bold">
+            {isLoading ? '—' : `${stats!.hashrate.toLocaleString()} H/s`}
+          </span>
+        </div>
+        {/* Block Time */}
+        <div className="flex justify-between items-center">
+          <span className="text-neutral/70 text-sm">Block Time</span>
+          <span className="text-mint text-xl font-bold">
+            {isLoading ? '—' : `${stats!.blockTimeSec}s`}
+          </span>
+        </div>
+      </div>
+    )}
+  </CardContent>
+</Card>
 
             {/* Wallet Profiler */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">

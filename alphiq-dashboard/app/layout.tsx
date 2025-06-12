@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
-import { AlephiumWalletProvider } from '@alephium/web3-react'
 import './globals.css'
+import { AlephiumWalletProvider } from "@alephium/web3-react"
+
 
 export const metadata: Metadata = {
-  title: 'Alph IQ',
-  description: 'Analytics dashboard',
+  title: 'AlphIQ',
+  description: 'Analytics and Onchain Profile dapp',
+  generator: 'Pranshu Rastogi',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
