@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AlephiumConnectButton } from "@alephium/web3-react"
-import { useNetworkStats } from "@/hooks/useNetworkStats"
+import { LiveStats } from '@/components/LiveStats'
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -56,7 +56,7 @@ const missions = [
 
 export default function AlphIQDashboard() {
   const [contractId, setContractId] = useState("")
-  const { stats, isLoading, isError } = useNetworkStats()
+  // const { stats, isLoading, isError } = useNetworkStats()
   // console.log('[AlphIQDashboard] stats:', stats, 'isLoading:', isLoading, 'isError:', isError)
 
 
@@ -104,45 +104,10 @@ export default function AlphIQDashboard() {
           {/* Left Panel - Analytics Core */}
           <div className="col-span-12 lg:col-span-3 space-y-6">
             {/* Live Network Stats */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
-  <CardHeader className="pb-3">
-    <CardTitle className="text-mint flex items-center">
-      <Activity className="w-5 h-5 mr-2" />
-      Live Network Stats
-    </CardTitle>
-  </CardHeader>
-  <CardContent className="space-y-4">
-    {/* Only show error if stats didn't load at all */}
-    {isError && !stats ? (
-      <div className="text-red-400 text-center">Failed to load stats</div>
-    ) : (
-      <div className="space-y-3">
-        {/* TPS */}
-        <div className="flex justify-between items-center">
-          <span className="text-neutral/70 text-sm">TPS</span>
-          <span className="text-mint text-xl font-bold animate-pulse-glow">
-            {isLoading ? '—' : stats!.tps.toLocaleString()}
-          </span>
-        </div>
-        {/* Hashrate */}
-        <div className="flex justify-between items-center">
-          <span className="text-neutral/70 text-sm">Hashrate</span>
-          <span className="text-mint text-xl font-bold">
-            {isLoading ? '—' : `${stats!.hashrate.toLocaleString()} H/s`}
-          </span>
-        </div>
-        {/* Block Time */}
-        <div className="flex justify-between items-center">
-          <span className="text-neutral/70 text-sm">Block Time</span>
-          <span className="text-mint text-xl font-bold">
-            {isLoading ? '—' : `${stats!.blockTimeSec}s`}
-          </span>
-        </div>
-      </div>
-    )}
-  </CardContent>
-</Card>
 
+            <div className="col-span-12 lg:col-span-3 space-y-6">
+            <LiveStats />
+            </div>
             {/* Wallet Profiler */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
               <CardHeader className="pb-3">
