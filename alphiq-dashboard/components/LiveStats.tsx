@@ -1,3 +1,4 @@
+// components/LiveStats.tsx
 'use client'
 
 import { Activity } from 'lucide-react'
@@ -25,20 +26,20 @@ export function LiveStats() {
         ? '—'
         : `${stats!.hashratePh.toLocaleString(undefined, {
             minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
+            maximumFractionDigits: 2
           })} PH/s`
     },
     {
       label: 'Total ALPH',
       value: isLoading
         ? '—'
-        : `${formatAbbrev(stats!.totalAlph)} M ALPH`.replace('M M','M') // ensure no double M
+        : `${formatAbbrev(stats!.totalAlph)} ALPH`
     },
     {
       label: 'Circulating ALPH',
       value: isLoading
         ? '—'
-        : `${formatAbbrev(stats!.circulatingAlph)} M ALPH`.replace('M M','M')
+        : `${formatAbbrev(stats!.circulatingAlph)} ALPH`
     }
   ]
 
