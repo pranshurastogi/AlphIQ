@@ -1,19 +1,23 @@
-import type { Metadata } from 'next'
+// app/layout.tsx
 import './globals.css'
-import { AlephiumWalletProvider } from "@alephium/web3-react"
+import { AlephiumWalletProvider } from '@alephium/web3-react'
+import TopBar from '@/components/TopBar'
 
-
-export const metadata: Metadata = {
-  title: 'AlphIQ',
-  description: 'Analytics and Onchain Profile dapp',
-  generator: 'Pranshu Rastogi',
+export const metadata = {
+  title: 'AlphIQ Dashboard',
+  description: 'DeFi Intelligence & Onchain Scores for Alephium',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <AlephiumWalletProvider theme="default">
+      <body className="bg-charcoal text-neutral">
+        {/* Wallet context for all pages */}
+        <AlephiumWalletProvider theme="retro">
+          {/* Shared header with Connect button */}
+          <TopBar />
+
+          {/* Page content */}
           {children}
         </AlephiumWalletProvider>
       </body>
