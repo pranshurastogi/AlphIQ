@@ -9,6 +9,7 @@ import { LiveStats } from '@/components/LiveStats'
 import { WalletProfiler } from '@/components/WalletProfiler'
 import { ContractDecoder } from '@/components/ContractDecoder'
 import { TokenDistributionCard } from '@/components/TokenDistributionCard'
+import { BlogFeed } from '@/components/BlogFeed'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { AnimatedGauge } from '@/components/animated-gauge'
@@ -106,8 +107,14 @@ export default function AlphIQDashboard() {
             </Card>
           </div>
 
+       
+
           {/* Right Panel */}
           <div className="col-span-12 lg:col-span-3 space-y-6">
+
+            {/* ← BlogFeed goes at top of right column */}
+            <BlogFeed />
+            
             {/* Onchain Score */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
               <CardHeader className="pb-3">

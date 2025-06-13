@@ -58,6 +58,7 @@
     "react-is": "^19.1.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "latest",
+    "rss-to-json": "^2.1.1",
     "sonner": "^1.7.1",
     "swr": "^2.3.3",
     "tailwind-merge": "^2.5.5",
