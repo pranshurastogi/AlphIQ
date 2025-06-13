@@ -59,10 +59,10 @@ export function WalletProfiler() {
       .map(tx => {
         const inSum = tx.inputs
           .filter(i => i.address === address)
-          .reduce((s, i) => s + BigInt(i.attoAlphAmount), 0n)
+          .reduce((s, i) => s + BigInt(i.attoAlphAmount ?? "0"), 0n)
         const outSum = tx.outputs
           .filter(o => o.address === address)
-          .reduce((s, o) => s + BigInt(o.attoAlphAmount), 0n)
+          .reduce((s, o) => s + BigInt(o.attoAlphAmount ?? "0"), 0n)
         return { tx, net: outSum - inSum }
       })
       .filter(({ net }) => net !== 0n)
@@ -74,7 +74,7 @@ export function WalletProfiler() {
   let totalTxDisplay = '—'
   if (address && addrInfo) {
     try {
-      const alph = Number(BigInt(addrInfo.balance)) / 1e18
+      const alph = Number(BigInt(addrInfo.balance ?? "0")) / 1e18
       balanceDisplay = `${alph.toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -93,45 +93,17 @@ export function WalletProfiler() {
     slice.forEach(tx => {
       const inSum = tx.inputs
         .filter(i => i.address === address)
-        .reduce((s, i) => s + BigInt(i.attoAlphAmount), 0n)
+        .reduce((s, i) => s + BigInt(i.attoAlphAmount ?? "0"), 0n)
       const outSum = tx.outputs
         .filter(o => o.address === address)
-        .reduce((s, o) => s + BigInt(o.attoAlphAmount), 0n)
+        .reduce((s, o) => s + BigInt(o.attoAlphAmount ?? "0"), 0n)
       sumSize += Number(outSum - inSum) / 1e18
       sumFee += Number((BigInt(tx.gasAmount) * BigInt(tx.gasPrice)) / 10n**18n)
     })
     return { avgSize: sumSize / slice.length, avgFee: sumFee / slice.length }
   }, [txs, address])
 
-  // 6) Top 2 Counterparties
-  const top2 = useMemo(() => {
-    if (!Array.isArray(txs) || !address) return []
-    const counter: Record<string, { volume: number; count: number }> = {}
-    ;(txs as AddressTx[]).forEach(tx => {
-      tx.inputs.forEach(i => {
-        if (i.address !== address) {
-          const vol = Number(BigInt(i.attoAlphAmount) / 10n**18n)
-          if (!counter[i.address]) counter[i.address] = { volume: 0, count: 0 }
-          counter[i.address].volume += vol
-          counter[i.address].count += 1
-        }
-      })
-      tx.outputs.forEach(o => {
-        if (o.address !== address) {
-          const vol = Number(BigInt(o.attoAlphAmount) / 10n**18n)
-          if (!counter[o.address]) counter[o.address] = { volume: 0, count: 0 }
-          counter[o.address].volume += vol
-          counter[o.address].count += 1
-        }
-      })
-    })
-    return Object.entries(counter)
-      .map(([addr, s]) => ({ address: addr, ...s }))
-      .sort((a, b) => b.volume - a.volume)
-      .slice(0, 2)
-  }, [txs, address])
-
-  // 7) 7-day sparkline
+  // 6) 7-day sparkline
   const sparkData = useMemo(() => {
     if (!Array.isArray(txs)) return []
     const today = new Date()
@@ -158,7 +130,6 @@ export function WalletProfiler() {
           <WalletIcon className="w-5 h-5" /> <span>Wallet Profiler</span>
         </CardTitle>
       </CardHeader>
-
       <CardContent className="space-y-4">
         {/* Balance */}
         <div>
@@ -240,7 +211,7 @@ export function WalletProfiler() {
               )
             })}
 
-            {recent.length > 5 && (
+            {processed.length > 5 && (
               <div className="pt-2 text-center">
                 <a href={`${EXPLORER_BASE}/${address}`} target="_blank" rel="noopener noreferrer">
                   <Button variant="ghost" size="sm">
@@ -254,8 +225,6 @@ export function WalletProfiler() {
 
         <Separator className="bg-white/10" />
 
-        {/* Top 2 Buddies */}
-        
         {/* 7-Day Sparkline */}
         {sparkData.length === 0 ? (
           <div className="text-neutral/70 text-center text-sm">Loading…</div>
