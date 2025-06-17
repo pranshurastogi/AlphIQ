@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { StreakCard } from "@/components/StreakCard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -27,6 +28,7 @@ import {
   Coins,
   Shield,
 } from "lucide-react"
+
 
 const achievements = [
   {
@@ -119,6 +121,7 @@ export default function OnchainScorePage() {
         <div className="grid grid-cols-12 gap-6">
           {/* Left Panel - Score Overview */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
+           
             {/* Main Score Display */}
             <Card className="bg-gradient-to-br from-mint/10 to-amber/10 border-mint/20 backdrop-blur-sm">
               <CardHeader className="pb-3">
@@ -139,6 +142,8 @@ export default function OnchainScorePage() {
               </CardContent>
             </Card>
 
+        
+
             {/* Score History */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
               <CardHeader className="pb-3">
@@ -158,6 +163,9 @@ export default function OnchainScorePage() {
 
           {/* Center Panel - Detailed Breakdown */}
           <div className="col-span-12 lg:col-span-5 space-y-6">
+            {/* 🎉 Streak Card */}
+            <StreakCard />
+
             {/* Score Breakdown */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
               <CardHeader className="pb-3">

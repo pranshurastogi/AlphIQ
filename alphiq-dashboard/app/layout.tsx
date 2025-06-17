@@ -2,6 +2,8 @@
 import './globals.css'
 import { AlephiumWalletProvider } from '@alephium/web3-react'
 import TopBar from '@/components/TopBar'
+import { Footer } from '@/components/Footer'
+
 
 export const metadata = {
   title: 'AlphIQ Dashboard',
@@ -20,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Page content */}
           {children}
         </AlephiumWalletProvider>
+        <Footer />
       </body>
     </html>
   )

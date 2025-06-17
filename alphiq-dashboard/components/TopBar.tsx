@@ -16,45 +16,81 @@ import { AlephiumConnectButton, useWallet } from '@alephium/web3-react'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function TopBar() {
+  // — wallet + routing
   const { account } = useWallet()
   const address = typeof account === 'string' ? account : account?.address
-
-  // Track which address we've already upserted into Supabase
-  const [lastUpserted, setLastUpserted] = useState<string | null>(null)
-  // Mobile hamburger menu open state
-  const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
+  const isAnalytics = pathname === '/'
+  const isScore     = pathname === '/onchain-score'
 
-  // Supabase upsert on every new address
+  // — mobile menu state
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // — track last‐upserted address
+  const [lastUpserted, setLastUpserted] = useState<string | null>(null)
+
   useEffect(() => {
     if (!address || address === lastUpserted) return
+
+    // Today & yesterday as YYYY-MM-DD
+    const todayDate     = new Date().toISOString().slice(0, 10)
+    const yesterdayDate = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+    const nowIso        = new Date().toISOString()
+
     ;(async () => {
-      const now = new Date().toISOString()
-      const { error } = await supabase
+      // 1) Upsert into users
+      const { error: userErr } = await supabase
         .from('users')
+        .upsert(
+          { address, exists_flag: true, checked_at: nowIso },
+          { onConflict: ['address'], returning: 'minimal' }
+        )
+      if (userErr) console.error('[Supabase] users upsert:', userErr)
+
+      // 2) Insert today’s login (ignore if already exists)
+      const { error: loginErr } = await supabase
+        .from('user_logins')
+        .insert({ address, login_date: todayDate }, { returning: 'minimal' })
+        .onConflict(['address', 'login_date'])
+        .ignore()
+      if (loginErr) console.error('[Supabase] user_logins insert:', loginErr)
+
+      // 3) Fetch existing streak
+      const { data: streakRow, error: getStreakErr } = await supabase
+        .from('user_streaks')
+        .select('current_streak, last_login_date')
+        .eq('address', address)
+        .single()
+      if (getStreakErr && getStreakErr.code !== 'PGRST116') {
+        console.error('[Supabase] getStreak:', getStreakErr)
+      }
+
+      // 4) Compute new streak value
+      let newStreak = 1
+      if (
+        streakRow?.last_login_date === yesterdayDate &&
+        typeof streakRow.current_streak === 'number'
+      ) {
+        newStreak = streakRow.current_streak + 1
+      }
+
+      // 5) Upsert streak record
+      const { error: upsertStreakErr } = await supabase
+        .from('user_streaks')
         .upsert(
           {
             address,
-            exists_flag: true,
-            checked_at: now,
-            // joined_at defaults to NOW() on insertion
+            current_streak: newStreak,
+            last_login_date: todayDate,
+            updated_at: nowIso,
           },
-          {
-            onConflict: ['address'],
-            returning: 'minimal',
-          }
+          { onConflict: ['address'], returning: 'minimal' }
         )
-      if (error) {
-        console.error('[Supabase] failed to sync user', address, error.message)
-      } else {
-        console.log('[Supabase] synced user', address)
-        setLastUpserted(address)
-      }
+      if (upsertStreakErr) console.error('[Supabase] user_streaks upsert:', upsertStreakErr)
+
+      setLastUpserted(address)
     })()
   }, [address, lastUpserted])
-
-  const isAnalytics = pathname === '/'
-  const isScore = pathname === '/onchain-score'
 
   return (
     <header className="relative border-b border-white/10 bg-charcoal/80 backdrop-blur-sm sticky top-0 z-50">
@@ -67,7 +103,7 @@ export default function TopBar() {
           <h1 className="text-xl font-bold text-neutral">AlphIQ</h1>
         </div>
 
-        {/* Desktop View Toggle */}
+        {/* Desktop nav */}
         <nav className="hidden md:flex items-center space-x-4 bg-white/5 rounded-lg p-1">
           <Link
             href="/"
@@ -93,7 +129,7 @@ export default function TopBar() {
           </Link>
         </nav>
 
-        {/* Mobile Hamburger */}
+        {/* Mobile hamburger */}
         <button
           className="md:hidden text-neutral hover:text-amber p-2 rounded"
           onClick={() => setMenuOpen((o) => !o)}
@@ -102,16 +138,14 @@ export default function TopBar() {
           {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
 
-        {/* Wallet Connect */}
+        {/* Wallet connect */}
         <AlephiumConnectButton className="bg-amber hover:bg-amber/90 text-charcoal font-medium flex items-center px-4 py-2 rounded">
           <WalletIcon className="w-4 h-4 mr-2" />
-          {address
-            ? `${address.slice(0, 6)}…${address.slice(-6)}`
-            : 'Connect Wallet'}
+          {address ? `${address.slice(0, 6)}…${address.slice(-6)}` : 'Connect Wallet'}
         </AlephiumConnectButton>
       </div>
 
-      {/* Mobile Menu Panel */}
+      {/* Mobile nav panel */}
       {menuOpen && (
         <div className="md:hidden bg-charcoal/95 backdrop-blur-sm absolute inset-x-0 top-full z-40">
           <nav className="flex flex-col px-6 py-4 space-y-2">
