@@ -80,8 +80,9 @@ Whether you're a blockchain enthusiast, developer, or data scientist, AlphIQ pro
 ---
 
 ## Screenshots
+<img width="716" alt="Screenshot 2025-06-17 at 7 19 18 PM" src="https://github.com/user-attachments/assets/982de8e6-eee9-4b6c-968e-dcd0f9d80cff" />
 
-> _Add screenshots or GIFs here to showcase the dashboard UI and features._
+<img width="716" alt="Screenshot 2025-06-17 at 7 19 35 PM" src="https://github.com/user-attachments/assets/9199f406-d16b-4685-9552-fa31a2272369" />
 
 ---
 
