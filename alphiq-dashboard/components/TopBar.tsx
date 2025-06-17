@@ -25,19 +25,19 @@ export default function TopBar() {
 
   // — mobile menu state
   const [menuOpen, setMenuOpen] = useState(false)
-
-  // — track last‐upserted address
+  // — track which address we've already processed this session
   const [lastUpserted, setLastUpserted] = useState<string | null>(null)
 
   useEffect(() => {
     if (!address || address === lastUpserted) return
 
-    // Today & yesterday as YYYY-MM-DD
     const todayDate     = new Date().toISOString().slice(0, 10)
     const yesterdayDate = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
     const nowIso        = new Date().toISOString()
 
     ;(async () => {
+      console.log('[Streak] start sync for', address)
+
       // 1) Upsert into users
       const { error: userErr } = await supabase
         .from('users')
@@ -45,48 +45,66 @@ export default function TopBar() {
           { address, exists_flag: true, checked_at: nowIso },
           { onConflict: ['address'], returning: 'minimal' }
         )
-      if (userErr) console.error('[Supabase] users upsert:', userErr)
+      if (userErr) console.error('[Streak] users.upsert error', userErr)
+      else          console.log('[Streak] users.upsert OK')
 
-      // 2) Insert today’s login (ignore if already exists)
+      // 2) Insert today’s login (ignore duplicates)
       const { error: loginErr } = await supabase
         .from('user_logins')
-        .insert({ address, login_date: todayDate }, { returning: 'minimal' })
-        .onConflict(['address', 'login_date'])
-        .ignore()
-      if (loginErr) console.error('[Supabase] user_logins insert:', loginErr)
+        .insert(
+          [{ address, login_date: todayDate }],
+          { onConflict: ['address','login_date'], ignoreDuplicates: true }
+        )
+      if (loginErr) console.error('[Streak] user_logins.insert error', loginErr)
+      else          console.log('[Streak] user_logins.insert OK')
 
       // 3) Fetch existing streak
       const { data: streakRow, error: getStreakErr } = await supabase
         .from('user_streaks')
-        .select('current_streak, last_login_date')
+        .select('current_streak,last_login_date')
         .eq('address', address)
         .single()
       if (getStreakErr && getStreakErr.code !== 'PGRST116') {
-        console.error('[Supabase] getStreak:', getStreakErr)
+        console.error('[Streak] fetch user_streaks error', getStreakErr)
+      } else {
+        console.log('[Streak] fetched row', streakRow)
       }
 
-      // 4) Compute new streak value
+      // 4) Compute new streak
       let newStreak = 1
-      if (
-        streakRow?.last_login_date === yesterdayDate &&
-        typeof streakRow.current_streak === 'number'
-      ) {
-        newStreak = streakRow.current_streak + 1
+      if (streakRow) {
+        const lastDate = streakRow.last_login_date
+        if (lastDate === todayDate) {
+          // already logged in today: keep same streak
+          newStreak = streakRow.current_streak
+          console.log('[Streak] same-day login, streak remains', newStreak)
+        } else if (lastDate === yesterdayDate) {
+          // consecutive days
+          newStreak = streakRow.current_streak + 1
+          console.log('[Streak] consecutive login, increment to', newStreak)
+        } else {
+          // gap of 2+ days or brand-new
+          newStreak = 1
+          console.log('[Streak] gap detected (last:', lastDate, '), reset to 1')
+        }
+      } else {
+        console.log('[Streak] no existing streak, start at 1')
       }
 
-      // 5) Upsert streak record
-      const { error: upsertStreakErr } = await supabase
+      // 5) Upsert streak
+      const { error: upsertErr } = await supabase
         .from('user_streaks')
         .upsert(
           {
             address,
-            current_streak: newStreak,
+            current_streak:  newStreak,
             last_login_date: todayDate,
-            updated_at: nowIso,
+            updated_at:      nowIso,
           },
           { onConflict: ['address'], returning: 'minimal' }
         )
-      if (upsertStreakErr) console.error('[Supabase] user_streaks upsert:', upsertStreakErr)
+      if (upsertErr) console.error('[Streak] user_streaks.upsert error', upsertErr)
+      else           console.log('[Streak] user_streaks.upsert OK, streak=', newStreak)
 
       setLastUpserted(address)
     })()

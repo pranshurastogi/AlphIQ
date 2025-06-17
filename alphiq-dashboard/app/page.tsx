@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { AnimatedGauge } from '@/components/animated-gauge'
 import { ProgressBar } from '@/components/progress-bar'
+import { OnchainScoreCard } from '@/components/OnchainScoreCard'
+
 import {
   Activity,
   Wallet,
@@ -116,20 +118,7 @@ export default function AlphIQDashboard() {
             <BlogFeed />
             
             {/* Onchain Score */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-mint flex items-center">
-                  <Trophy className="w-5 h-5 mr-2" />
-                  Onchain Score
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center space-y-4">
-                <AnimatedGauge value={840} maxValue={1000} />
-                <Badge className="bg-mint/20 text-mint border-mint/30">
-                  <Star className="w-3 h-3 mr-1" /> Onchain Strategist
-                </Badge>
-              </CardContent>
-            </Card>
+            <OnchainScoreCard />
 
             {/* Score Breakdown */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">

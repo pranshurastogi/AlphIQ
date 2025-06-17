@@ -28,6 +28,7 @@ import {
   Coins,
   Shield,
 } from "lucide-react"
+import { OnchainScoreCard } from "@/components/OnchainScoreCard"
 
 
 const achievements = [
@@ -123,24 +124,9 @@ export default function OnchainScorePage() {
           <div className="col-span-12 lg:col-span-4 space-y-6">
            
             {/* Main Score Display */}
-            <Card className="bg-gradient-to-br from-mint/10 to-amber/10 border-mint/20 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-mint flex items-center">
-                  <Trophy className="w-5 h-5 mr-2" />
-                  Your Onchain Score
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center space-y-4">
-                <AnimatedGauge value={totalScore} maxValue={maxTotalScore} size={140} />
-                <div className="text-center space-y-2">
-                  <Badge className="bg-mint/20 text-mint border-mint/30 text-lg px-4 py-1">
-                    <Star className="w-4 h-4 mr-2" />
-                    Onchain Strategist
-                  </Badge>
-                  <div className="text-sm text-neutral/70">Rank #6 globally • Top 15%</div>
-                </div>
-              </CardContent>
-            </Card>
+                 {/* Onchain Score */}
+                 <OnchainScoreCard />
+
 
         
 
