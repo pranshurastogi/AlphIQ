@@ -3,12 +3,12 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   Activity,
   Trophy,
   Wallet as WalletIcon,
-  Zap,
   Menu,
   X,
 } from 'lucide-react'
@@ -16,16 +16,13 @@ import { AlephiumConnectButton, useWallet } from '@alephium/web3-react'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function TopBar() {
-  // — wallet + routing
   const { account } = useWallet()
   const address = typeof account === 'string' ? account : account?.address
   const pathname = usePathname()
   const isAnalytics = pathname === '/'
   const isScore     = pathname === '/onchain-score'
 
-  // — mobile menu state
   const [menuOpen, setMenuOpen] = useState(false)
-  // — track which address we've already processed this session
   const [lastUpserted, setLastUpserted] = useState<string | null>(null)
 
   useEffect(() => {
@@ -36,9 +33,9 @@ export default function TopBar() {
     const nowIso        = new Date().toISOString()
 
     ;(async () => {
-      console.log('[Streak] start sync for', address)
+      console.log('[Streak] sync start for', address)
 
-      // 1) Upsert into users
+      // 1) upsert user
       const { error: userErr } = await supabase
         .from('users')
         .upsert(
@@ -48,50 +45,45 @@ export default function TopBar() {
       if (userErr) console.error('[Streak] users.upsert error', userErr)
       else          console.log('[Streak] users.upsert OK')
 
-      // 2) Insert today’s login (ignore duplicates)
+      // 2) insert today’s login, ignore dupes
       const { error: loginErr } = await supabase
         .from('user_logins')
         .insert(
           [{ address, login_date: todayDate }],
-          { onConflict: ['address','login_date'], ignoreDuplicates: true }
+          { onConflict: ['address', 'login_date'], ignoreDuplicates: true }
         )
-      if (loginErr) console.error('[Streak] user_logins.insert error', loginErr)
-      else          console.log('[Streak] user_logins.insert OK')
+      if (loginErr) console.error('[Streak] logins.insert error', loginErr)
+      else          console.log('[Streak] logins.insert OK')
 
-      // 3) Fetch existing streak
+      // 3) fetch streak
       const { data: streakRow, error: getStreakErr } = await supabase
         .from('user_streaks')
         .select('current_streak,last_login_date')
         .eq('address', address)
         .single()
       if (getStreakErr && getStreakErr.code !== 'PGRST116') {
-        console.error('[Streak] fetch user_streaks error', getStreakErr)
+        console.error('[Streak] fetch error', getStreakErr)
       } else {
-        console.log('[Streak] fetched row', streakRow)
+        console.log('[Streak] fetched', streakRow)
       }
 
-      // 4) Compute new streak
+      // 4) compute new streak
       let newStreak = 1
       if (streakRow) {
-        const lastDate = streakRow.last_login_date
-        if (lastDate === todayDate) {
-          // already logged in today: keep same streak
+        if (streakRow.last_login_date === todayDate) {
           newStreak = streakRow.current_streak
-          console.log('[Streak] same-day login, streak remains', newStreak)
-        } else if (lastDate === yesterdayDate) {
-          // consecutive days
+          console.log('[Streak] same-day, stay at', newStreak)
+        } else if (streakRow.last_login_date === yesterdayDate) {
           newStreak = streakRow.current_streak + 1
-          console.log('[Streak] consecutive login, increment to', newStreak)
+          console.log('[Streak] consecutive, increment to', newStreak)
         } else {
-          // gap of 2+ days or brand-new
-          newStreak = 1
-          console.log('[Streak] gap detected (last:', lastDate, '), reset to 1')
+          console.log('[Streak] gap detected, reset to 1')
         }
       } else {
-        console.log('[Streak] no existing streak, start at 1')
+        console.log('[Streak] no prior streak, start at 1')
       }
 
-      // 5) Upsert streak
+      // 5) upsert streak
       const { error: upsertErr } = await supabase
         .from('user_streaks')
         .upsert(
@@ -103,8 +95,8 @@ export default function TopBar() {
           },
           { onConflict: ['address'], returning: 'minimal' }
         )
-      if (upsertErr) console.error('[Streak] user_streaks.upsert error', upsertErr)
-      else           console.log('[Streak] user_streaks.upsert OK, streak=', newStreak)
+      if (upsertErr) console.error('[Streak] streaks.upsert error', upsertErr)
+      else           console.log('[Streak] streaks.upsert OK, streak=', newStreak)
 
       setLastUpserted(address)
     })()
@@ -115,9 +107,12 @@ export default function TopBar() {
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-mint to-amber rounded-lg flex items-center justify-center">
-            <Zap className="w-5 h-5 text-charcoal" />
-          </div>
+          <Image
+            src="/ALphIQ.png"
+            alt="AlphIQ logo"
+            width={32}
+            height={32}
+          />
           <h1 className="text-xl font-bold text-neutral">AlphIQ</h1>
         </div>
 
@@ -126,9 +121,7 @@ export default function TopBar() {
           <Link
             href="/"
             className={`flex items-center px-3 py-1 rounded ${
-              isAnalytics
-                ? 'bg-white/10 text-amber'
-                : 'text-neutral hover:text-amber'
+              isAnalytics ? 'bg-white/10 text-amber' : 'text-neutral hover:text-amber'
             }`}
           >
             <Activity className="w-4 h-4 mr-1" />
@@ -137,9 +130,7 @@ export default function TopBar() {
           <Link
             href="/onchain-score"
             className={`flex items-center px-3 py-1 rounded ${
-              isScore
-                ? 'bg-white/10 text-amber'
-                : 'text-neutral hover:text-amber'
+              isScore ? 'bg-white/10 text-amber' : 'text-neutral hover:text-amber'
             }`}
           >
             <Trophy className="w-4 h-4 mr-1" />
@@ -159,7 +150,9 @@ export default function TopBar() {
         {/* Wallet connect */}
         <AlephiumConnectButton className="bg-amber hover:bg-amber/90 text-charcoal font-medium flex items-center px-4 py-2 rounded">
           <WalletIcon className="w-4 h-4 mr-2" />
-          {address ? `${address.slice(0, 6)}…${address.slice(-6)}` : 'Connect Wallet'}
+          {address
+            ? `${address.slice(0, 6)}…${address.slice(-6)}`
+            : 'Connect Wallet'}
         </AlephiumConnectButton>
       </div>
 
@@ -170,9 +163,7 @@ export default function TopBar() {
             <Link
               href="/"
               className={`flex items-center px-3 py-2 rounded ${
-                isAnalytics
-                  ? 'bg-white/10 text-amber'
-                  : 'text-neutral hover:text-amber'
+                isAnalytics ? 'bg-white/10 text-amber' : 'text-neutral hover:text-amber'
               }`}
               onClick={() => setMenuOpen(false)}
             >
@@ -182,9 +173,7 @@ export default function TopBar() {
             <Link
               href="/onchain-score"
               className={`flex items-center px-3 py-2 rounded ${
-                isScore
-                  ? 'bg-white/10 text-amber'
-                  : 'text-neutral hover:text-amber'
+                isScore ? 'bg-white/10 text-amber' : 'text-neutral hover:text-amber'
               }`}
               onClick={() => setMenuOpen(false)}
             >
