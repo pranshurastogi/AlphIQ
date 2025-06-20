@@ -108,7 +108,7 @@ export default function TopBar() {
         {/* Logo */}
         <div className="flex items-center space-x-3">
           <Image
-            src="/ALphIQ.png"
+            src="/images/alphiq.png"
             alt="AlphIQ logo"
             width={32}
             height={32}
