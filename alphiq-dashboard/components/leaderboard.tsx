@@ -1,19 +1,45 @@
-"use client"
+// components/Leaderboard.tsx
+'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Crown, Medal, Award, TrendingUp } from "lucide-react"
+import { useWallet } from '@alephium/web3-react'
+import useSWR from 'swr'
+import { supabase } from '@/lib/supabaseClient'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Crown, Medal, Award, TrendingUp } from 'lucide-react'
 
-const leaderboardData = [
-  { rank: 1, address: "0x7a2...f8c", score: 2450, change: "+12", badge: "Onchain Legend" },
-  { rank: 2, address: "0x9b1...2de", score: 2380, change: "+8", badge: "DeFi Master" },
-  { rank: 3, address: "0x4c8...a91", score: 2290, change: "-3", badge: "Smart Trader" },
-  { rank: 4, address: "0x1f5...6b7", score: 2180, change: "+15", badge: "Contract Wizard" },
-  { rank: 5, address: "0x8d3...c4e", score: 2050, change: "+5", badge: "Onchain Explorer" },
-  { rank: 6, address: "0x123...abc", score: 1840, change: "+22", badge: "Onchain Strategist", isCurrentUser: true },
-]
+type User = {
+  address: string
+  score: number
+  title: string
+  joined_at: string
+}
+
+const fetchLeaderboard = async (): Promise<User[]> => {
+  const { data, error } = await supabase
+    .from<User>('users')
+    .select('address,score,title,joined_at')
+    .order('score', { ascending: false })    // highest first
+    .order('joined_at', { ascending: true }) // tiebreaker: earliest join
+  if (error) throw error
+  return data ?? []
+}
 
 export function Leaderboard() {
+  const { account } = useWallet()
+  const currentAddress = typeof account === 'string' ? account : account?.address
+  const { data: users, error } = useSWR('leaderboard', fetchLeaderboard)
+
+  if (error) {
+    console.error('[Leaderboard] fetch error', error)
+    return <div className="text-red-400 p-4">Failed to load leaderboard.</div>
+  }
+  if (!users) {
+    return <div className="text-neutral/60 p-4">Loading leaderboard…</div>
+  }
+
+  const topUsers = users.slice(0, 10)
+
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -23,7 +49,11 @@ export function Leaderboard() {
       case 3:
         return <Award className="w-5 h-5 text-amber/70" />
       default:
-        return <span className="w-5 h-5 flex items-center justify-center text-neutral/60 font-bold">{rank}</span>
+        return (
+          <span className="w-5 h-5 flex items-center justify-center text-neutral/60 font-bold">
+            {rank}
+          </span>
+        )
     }
   }
 
@@ -36,36 +66,56 @@ export function Leaderboard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {leaderboardData.map((user) => (
-          <div
-            key={user.rank}
-            className={`flex items-center justify-between p-3 rounded-lg transition-all ${
-              user.isCurrentUser ? "bg-amber/10 border border-amber/20" : "bg-white/5 hover:bg-white/10"
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              {getRankIcon(user.rank)}
-              <div>
-                <div className={`font-medium ${user.isCurrentUser ? "text-amber" : "text-neutral"}`}>
-                  {user.address}
-                  {user.isCurrentUser && <span className="text-xs ml-2 text-amber/70">(You)</span>}
-                </div>
-                <Badge variant="secondary" className="text-xs mt-1">
-                  {user.badge}
-                </Badge>
-              </div>
-            </div>
+        {topUsers.map((user, idx) => {
+          const rank = idx + 1
+          const isMe =
+            currentAddress &&
+            user.address.toLowerCase() === currentAddress.toLowerCase()
 
-            <div className="text-right">
-              <div className={`font-bold ${user.isCurrentUser ? "text-amber" : "text-mint"}`}>
+          return (
+            <div
+              key={user.address}
+              className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
+                isMe
+                  ? 'bg-amber/10 border border-amber/20'
+                  : 'bg-white/5 hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                {getRankIcon(rank)}
+                <div>
+                  <div
+                    className={`font-medium ${
+                      isMe ? 'text-amber' : 'text-neutral'
+                    }`}
+                  >
+                    {user.address.slice(0, 6)}…{user.address.slice(-6)}
+                    {isMe && (
+                      <span className="text-xs ml-2 text-amber/70">(You)</span>
+                    )}
+                  </div>
+                  <Badge
+                    className={`text-xs mt-1 ${
+                      isMe
+                        ? 'bg-amber/20 text-amber border-amber/30'
+                        : 'bg-white/10 text-neutral border-white/20'
+                    }`}
+                  >
+                    {user.title}
+                  </Badge>
+                </div>
+              </div>
+
+              <div
+                className={`font-bold ${
+                  isMe ? 'text-amber' : 'text-mint'
+                }`}
+              >
                 {user.score.toLocaleString()}
               </div>
-              <div className={`text-xs ${user.change.startsWith("+") ? "text-mint" : "text-red-400"}`}>
-                {user.change}
-              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </CardContent>
     </Card>
   )
