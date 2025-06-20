@@ -57,6 +57,7 @@
     "react-dom": "^19",
     "react-hook-form": "^7.54.1",
     "react-is": "^19.1.0",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "latest",
     "rss-to-json": "^2.1.1",

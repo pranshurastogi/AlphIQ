@@ -59,16 +59,27 @@ Whether you're a blockchain enthusiast, developer, or data scientist, AlphIQ pro
 ### 5. Onchain Score & Leaderboards
 - Calculates a gamified onchain score for each wallet
 - XP, achievements, streaks, and multipliers
-- Leaderboard and score history chart to track progress
+- **OnchainScoreCard**: New, visually rich card summarizing a wallet's onchain score, XP, streak, and multipliers
+- **StreakCard**: Enhanced streak tracking and visualization
+- **Leaderboard**: Improved ranking, now with more detailed wallet stats and dynamic updates
+- **Score History Chart**: Interactive chart showing score progression over time
 
 ### 6. Quests & Achievements
 - Complete onchain actions to earn XP and unlock badges
 - Encourages user engagement and learning
 
-### 7. Customizable UI
+### 7. Token Distribution Analytics
+- Analyze token distribution across wallets
+- Visualize top holders and distribution changes
+
+### 8. Customizable & Modern UI
 - Built with Tailwind CSS and Radix UI for easy theming
-- Responsive and accessible design
-- Easily extendable with new components
+- Responsive, accessible, and visually appealing
+- Modular components for rapid extension
+
+### 9. Blog Feed & Updates
+- Fetches and displays latest blog posts or project updates
+- Keeps users informed about new features and ecosystem news
 
 ---
 
@@ -161,10 +172,17 @@ AlphIQ/
 - **components/**
   - `LiveStats.tsx`: Displays real-time network stats
   - `WalletProfiler.tsx`: Wallet analytics and activity
+  - `OnchainScoreCard.tsx`: **New!** Summarizes wallet's onchain score, XP, streak, and multipliers
+  - `StreakCard.tsx`: Enhanced streak tracking and visualization
+  - `leaderboard.tsx`: Improved leaderboard with dynamic wallet stats
+  - `score-history-chart.tsx`: Interactive score progression chart
   - `animated-gauge.tsx`: Animated gauge for scores/metrics
   - `progress-bar.tsx`: XP and progress visualization
   - `ContractDecoder.tsx`: Smart contract decoding UI
-  - `leaderboard.tsx`, `score-history-chart.tsx`, `score-multiplier.tsx`: Gamification widgets
+  - `score-multiplier.tsx`: Visualizes score multipliers
+  - `TokenDistributionCard.tsx`: Token distribution analytics
+  - `BlogFeed.tsx`: Blog/news feed
+  - `achievement-card.tsx`: Achievement and badge display
   - `ui/`: Radix UI-based primitives (buttons, dialogs, etc.)
   - `Footer.tsx`, `TopBar.tsx`: Layout and navigation
 - **hooks/**
@@ -219,11 +237,15 @@ AlphIQ/
 
 - **LiveStats.tsx:** Fetches and displays up-to-date network stats using the custom `useNetworkStats` hook. Auto-refreshes and shows block height, TPS, and more.
 - **WalletProfiler.tsx:** Lets users enter or connect a wallet address, then fetches balances, recent transactions, and visualizes activity.
+- **OnchainScoreCard.tsx:** **New!** Summarizes a wallet's onchain score, XP, streak, and multipliers in a visually rich card.
+- **StreakCard.tsx:** Enhanced streak tracking, showing current and best streaks, and visual cues for maintaining activity.
+- **Leaderboard.tsx:** Ranks wallets by onchain score, XP, or achievements. Now with more detailed wallet stats and dynamic updates.
+- **ScoreHistoryChart.tsx:** Interactive chart showing score progression over time, with tooltips and zoom.
 - **ContractDecoder.tsx:** Accepts contract addresses or data, decodes using Alephium/Ralph standards, and presents human-readable info.
-- **Leaderboard.tsx:** Ranks wallets by onchain score, XP, or achievements. Pulls data from scoring logic in `lib/utils.ts`.
+- **TokenDistributionCard.tsx:** Visualizes token distribution among top holders and changes over time.
+- **BlogFeed.tsx:** Fetches and displays blog posts or updates from the team/community.
 - **AnimatedGauge.tsx:** Visually represents scores, XP, or other metrics with smooth, animated gauges.
 - **ProgressBar.tsx:** Shows XP progress toward the next level or achievement.
-- **BlogFeed.tsx:** (If enabled) Fetches and displays blog posts or updates from the team/community.
 - **UI Primitives:** All basic UI elements (buttons, dialogs, etc.) are in `components/ui/` for easy reuse and customization.
 
 ---

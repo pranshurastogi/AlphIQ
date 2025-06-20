@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator'
 import { AnimatedGauge } from '@/components/animated-gauge'
 import { ProgressBar } from '@/components/progress-bar'
 import { OnchainScoreCard } from '@/components/OnchainScoreCard'
+import { OnchainAIAnalyzer } from '@/components/OnchainAIAnalyzer'
 
 import {
   Activity,
@@ -63,28 +64,8 @@ export default function AlphIQDashboard() {
             <ContractDecoder />
 
             {/* Onchain Alerts */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-amber flex items-center">
-                  <AlertTriangle className="w-5 h-5 mr-2" />
-                  Onchain Alerts Feed
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {alerts.map((a, i) => (
-                  <div key={i} className="flex items-start space-x-3 p-3 bg-white/5 rounded-lg">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${a.severity === 'high' ? 'bg-red-400' : 'bg-amber'}`} />
-                    <div className="flex-1">
-                      <div className="text-neutral font-medium">{a.message}</div>
-                      <div className="text-xs text-neutral/50 mt-1">{a.time}</div>
-                    </div>
-                    <Badge variant={a.severity === 'high' ? 'destructive' : 'secondary'} className="text-xs">
-                      {a.severity}
-                    </Badge>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+             {/* Modular Onchain AI Analyser */}
+            <OnchainAIAnalyzer />
 
             {/* Quest of the Day */}
             <Card className="bg-gradient-to-r from-amber/10 to-mint/10 border-amber/20 backdrop-blur-sm">
