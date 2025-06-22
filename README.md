@@ -2,7 +2,7 @@
 
 [![Live Demo](https://img.shields.io/badge/demo-live-green)](https://alph-iq.vercel.app/) [![GitHub](https://img.shields.io/badge/github-repo-blue)](https://github.com/pranshurastogi/AlphIQ)
 
-AlphIQ is a comprehensive, open-source analytics dashboard for the Alephium blockchain. It provides real-time blockchain metrics, wallet profiling, contract decoding, and gamified onchain scoring—all in a modern, extensible interface. Built with Next.js, React, Tailwind CSS, and Radix UI, AlphIQ is designed for both end-users and developers who want to explore, analyze, or extend Alephium's ecosystem.
+AlphIQ is a comprehensive, open source analytics dashboard for the Alephium blockchain. It provides real time blockchain metrics, wallet profiling, contract decoding, and gamified onchain scoring all in a modern, extensible interface. Built with Next.js, React, Tailwind CSS, and Radix UI, AlphIQ is designed for both end users and developers who want to explore, analyze, or extend Alephium's ecosystem.
 
 ---
 
