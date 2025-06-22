@@ -276,7 +276,7 @@ Whether you want to fix a bug, add a feature, improve documentation, or suggest 
 - Write clear commit messages
 - For major changes, open an issue first to discuss your ideas
 - Add tests or documentation if relevant
-- Be respectful and constructive in code reviews and discussions
+- Be respectful and constructive in code reviews and discussions.
 
 **We especially encourage first-time contributors and Alephium community members to get involved!**
 
