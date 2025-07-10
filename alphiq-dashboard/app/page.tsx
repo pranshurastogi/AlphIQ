@@ -16,6 +16,7 @@ import { AnimatedGauge } from '@/components/animated-gauge'
 import { ProgressBar } from '@/components/progress-bar'
 import { OnchainScoreCard } from '@/components/OnchainScoreCard'
 import { OnchainAIAnalyzer } from '@/components/OnchainAIAnalyzer'
+import { QuestOfDay } from '@/components/QuestOfDay'
 
 import {
   Activity,
@@ -68,26 +69,7 @@ export default function AlphIQDashboard() {
             <OnchainAIAnalyzer />
 
             {/* Quest of the Day */}
-            <Card className="bg-gradient-to-r from-amber/10 to-mint/10 border-amber/20 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-amber flex items-center">
-                  <Target className="w-5 h-5 mr-2" />
-                  Quest of the Day
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-amber/20 rounded-lg flex items-center justify-center">
-                    <Flame className="w-6 h-6 text-amber" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-neutral">Deploy a Smart Contract</div>
-                    <div className="text-sm text-neutral/70">Deploy any contract to earn 100 bonus points</div>
-                  </div>
-                  <Badge className="bg-amber text-charcoal">+100 pts</Badge>
-                </div>
-              </CardContent>
-            </Card>
+            <QuestOfDay />
           </div>
 
        
