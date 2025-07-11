@@ -243,50 +243,60 @@ export function QuestOfDay() {
                   <span>{sub.status}</span>
                 </div>
               ) : openForm === quest.id ? (
-                <div className="space-y-2">
-                  {error && <p className="text-sm text-red/70">{error}</p>}
-                  <Input
-                    placeholder="Proof URL (e.g. IPFS link)"
-                    value={proofUrl}
-                    onChange={e => setProofUrl(e.target.value)}
-                  />
-                  <Input type="file" onChange={handleFileChange} />
-                  <Textarea
-                    placeholder="Additional notes (optional)"
-                    rows={2}
-                    value={proofData || ''}
-                    onChange={e => setProofData(e.target.value)}
-                  />
+                <div className="space-y-3 p-2 bg-card/30 rounded-lg shadow-inner">
+                  {error && <p className="text-sm text-red/70 mb-2">{error}</p>}
+                  <div className="flex flex-col gap-2">
+                    <Input
+                      placeholder="Proof URL (e.g. IPFS link)"
+                      value={proofUrl}
+                      onChange={e => setProofUrl(e.target.value)}
+                      className="bg-background text-foreground border border-border rounded-md px-3 py-2 focus:ring-2 focus:ring-mint"
+                    />
+                    <Input type="file" onChange={handleFileChange} className="bg-background text-foreground border border-border rounded-md px-3 py-2 focus:ring-2 focus:ring-mint" />
+                    <Textarea
+                      placeholder="Additional notes (optional)"
+                      rows={2}
+                      value={proofData || ''}
+                      onChange={e => setProofData(e.target.value)}
+                      className="bg-background text-foreground border border-border rounded-md px-3 py-2 focus:ring-2 focus:ring-mint"
+                    />
+                  </div>
                   <Separator />
-                  <Button
-                    onClick={() => handleSubmit(quest.id)}
-                    disabled={submitting}
-                    className="w-full"
-                  >
-                    {submitting ? 'Submitting…' : 'Submit Proof'}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setOpenForm(null)
-                      setError(null)
-                    }}
-                    className="w-full"
-                  >
-                    Cancel
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      onClick={() => handleSubmit(quest.id)}
+                      disabled={submitting}
+                      className="relative overflow-hidden rounded-full px-6 py-2 bg-primary text-primary-foreground font-semibold shadow-lg flex items-center justify-center gap-2 transition-transform duration-200 hover:scale-105 hover:shadow-mint/40 focus:outline-none focus:ring-2 focus:ring-mint group w-full"
+                    >
+                      <Target className="w-4 h-4 mr-1 transition-transform duration-300 group-hover:scale-125 text-primary-foreground" />
+                      <span className="text-primary-foreground font-semibold drop-shadow-sm">{submitting ? 'Submitting…' : 'Submit Proof'}</span>
+                      <span className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 group-hover:animate-pulse bg-mint pointer-events-none" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setOpenForm(null)
+                        setError(null)
+                      }}
+                      className="w-full text-muted-foreground hover:text-primary-foreground border border-border rounded-full"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="mt-auto"
+                  className="mt-auto relative overflow-hidden rounded-full px-6 py-2 bg-primary text-primary-foreground font-semibold shadow-lg flex items-center gap-2 transition-transform duration-200 hover:scale-105 hover:shadow-mint/40 focus:outline-none focus:ring-2 focus:ring-mint group"
                   onClick={() => {
                     setOpenForm(quest.id)
                     setError(null)
                   }}
                 >
-                  Participate
+                  <Target className="w-4 h-4 mr-1 transition-transform duration-300 group-hover:scale-125 group-hover:text-mint text-primary-foreground" />
+                  <span className="text-primary-foreground font-semibold drop-shadow-sm">Participate</span>
+                  <span className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 group-hover:animate-pulse bg-mint pointer-events-none" />
                 </Button>
               )}
             </Card>
