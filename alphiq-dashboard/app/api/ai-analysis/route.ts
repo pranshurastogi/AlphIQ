@@ -24,8 +24,9 @@ function checkRateLimit(ip: string): boolean {
 }
 
 function validateAddress(address: string): boolean {
-  // Basic Alephium address validation
-  return /^[1-9A-HJ-NP-Za-km-z]{34}$/.test(address)
+  // More lenient Alephium address validation
+  // Alephium addresses can be 26-35 characters long and contain alphanumeric characters
+  return /^[1-9A-HJ-NP-Za-km-z]{26,35}$/.test(address)
 }
 
 export async function POST(request: Request) {
