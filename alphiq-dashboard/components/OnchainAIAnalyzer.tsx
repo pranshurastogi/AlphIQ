@@ -8,12 +8,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 
-function validateAddress(address: string): boolean {
-  // More lenient Alephium address validation
-  // Alephium addresses can be 26-35 characters long and contain alphanumeric characters
-  return /^[1-9A-HJ-NP-Za-km-z]{26,35}$/.test(address)
-}
-
 export function OnchainAIAnalyzer() {
   const { account } = useWallet()
   const address = typeof account === 'string' ? account : account?.address
@@ -25,14 +19,6 @@ export function OnchainAIAnalyzer() {
   const handleSummarize = async () => {
     if (!address) {
       setError('🔗 Please connect your wallet first.')
-      return
-    }
-
-    // Debug: log the address to see its format
-    console.log('[OnchainAI] Address format:', address, 'Length:', address?.length)
-
-    if (!validateAddress(address)) {
-      setError(`Invalid wallet address format. Address: ${address?.slice(0, 10)}...`)
       return
     }
 
