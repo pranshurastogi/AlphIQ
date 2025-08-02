@@ -109,5 +109,3 @@ AlphIQ is a comprehensive analytics dashboard for the Alephium blockchain, featu
 | Documentation                | Partial      | README good, code comments can improve    |
 
 ---
-
-_This report is auto-generated from code and documentation review. For the latest status, see the [README](./README.md) or project board._ 

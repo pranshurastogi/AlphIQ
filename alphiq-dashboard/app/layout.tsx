@@ -16,7 +16,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="bg-charcoal text-neutral">
         {/* Wallet context for all pages */}
-        <AlephiumWalletProvider theme="retro">
+        <AlephiumWalletProvider 
+          theme="retro"
+          network="mainnet"
+        >
           {/* Shared header with Connect button */}
           <TopBar />
 
