@@ -1,12 +1,18 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "alphiq-dashboard",
+  "version": "1.0.0",
   "private": true,
+  "description": "DeFi Intelligence & Onchain Scores for Alephium",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "security:audit": "npm audit",
+    "security:fix": "npm audit fix",
+    "security:check": "npm audit --audit-level=moderate",
+    "type-check": "tsc --noEmit",
+    "build:check": "npm run type-check && npm run build"
   },
   "dependencies": {
     "@alephium/get-extension-wallet": "^1.11.7",
@@ -76,5 +82,22 @@
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/alphiq-dashboard.git"
+  },
+  "keywords": [
+    "alephium",
+    "defi",
+    "dashboard",
+    "blockchain",
+    "analytics"
+  ],
+  "author": "AlphIQ Team",
+  "license": "MIT"
 }

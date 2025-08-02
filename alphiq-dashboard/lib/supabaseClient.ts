@@ -1,7 +1,18 @@
 // lib/supabaseClient.ts
 import { createClient } from '@supabase/supabase-js'
+import { config, validateConfig } from './config'
+
+// Validate configuration
+if (typeof window !== 'undefined') {
+  // Only validate on client side
+  try {
+    validateConfig()
+  } catch (error) {
+    console.error('Configuration validation failed:', error)
+  }
+}
 
 export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  config.supabase.url!,
+  config.supabase.anonKey!
 )

@@ -33,72 +33,67 @@ export default function TopBar() {
     const nowIso        = new Date().toISOString()
 
     ;(async () => {
-      console.log('[Streak] sync start for', address)
-
-      // 1) upsert user
-      const { error: userErr } = await supabase
-        .from('users')
-        .upsert(
-          { address, exists_flag: true, checked_at: nowIso },
-          { onConflict: ['address'], returning: 'minimal' }
-        )
-      if (userErr) console.error('[Streak] users.upsert error', userErr)
-      else          console.log('[Streak] users.upsert OK')
-
-      // 2) insert today’s login, ignore dupes
-      const { error: loginErr } = await supabase
-        .from('user_logins')
-        .insert(
-          [{ address, login_date: todayDate }],
-          { onConflict: ['address', 'login_date'], ignoreDuplicates: true }
-        )
-      if (loginErr) console.error('[Streak] logins.insert error', loginErr)
-      else          console.log('[Streak] logins.insert OK')
-
-      // 3) fetch streak
-      const { data: streakRow, error: getStreakErr } = await supabase
-        .from('user_streaks')
-        .select('current_streak,last_login_date')
-        .eq('address', address)
-        .single()
-      if (getStreakErr && getStreakErr.code !== 'PGRST116') {
-        console.error('[Streak] fetch error', getStreakErr)
-      } else {
-        console.log('[Streak] fetched', streakRow)
-      }
-
-      // 4) compute new streak
-      let newStreak = 1
-      if (streakRow) {
-        if (streakRow.last_login_date === todayDate) {
-          newStreak = streakRow.current_streak
-          console.log('[Streak] same-day, stay at', newStreak)
-        } else if (streakRow.last_login_date === yesterdayDate) {
-          newStreak = streakRow.current_streak + 1
-          console.log('[Streak] consecutive, increment to', newStreak)
-        } else {
-          console.log('[Streak] gap detected, reset to 1')
+      try {
+        // 1) upsert user
+        const { error: userErr } = await supabase
+          .from('users')
+          .upsert(
+            { address, exists_flag: true, checked_at: nowIso },
+            { onConflict: 'address' }
+          )
+        if (userErr) {
+          console.error('[Streak] users.upsert error:', userErr.message)
         }
-      } else {
-        console.log('[Streak] no prior streak, start at 1')
+
+        // 2) insert today's login
+        const { error: loginErr } = await supabase
+          .from('user_logins')
+          .insert([{ address, login_date: todayDate }])
+        if (loginErr) {
+          console.error('[Streak] logins.insert error:', loginErr.message)
+        }
+
+        // 3) fetch streak
+        const { data: streakRow, error: getStreakErr } = await supabase
+          .from('user_streaks')
+          .select('current_streak,last_login_date')
+          .eq('address', address)
+          .single()
+        
+        if (getStreakErr && getStreakErr.code !== 'PGRST116') {
+          console.error('[Streak] fetch error:', getStreakErr.message)
+        }
+
+        // 4) compute new streak
+        let newStreak = 1
+        if (streakRow) {
+          if (streakRow.last_login_date === todayDate) {
+            newStreak = streakRow.current_streak
+          } else if (streakRow.last_login_date === yesterdayDate) {
+            newStreak = streakRow.current_streak + 1
+          }
+        }
+
+        // 5) upsert streak
+        const { error: upsertErr } = await supabase
+          .from('user_streaks')
+          .upsert(
+            {
+              address,
+              current_streak:  newStreak,
+              last_login_date: todayDate,
+              updated_at:      nowIso,
+            },
+            { onConflict: 'address' }
+          )
+        if (upsertErr) {
+          console.error('[Streak] streaks.upsert error:', upsertErr.message)
+        }
+
+        setLastUpserted(address)
+      } catch (error) {
+        console.error('[Streak] Unexpected error:', error)
       }
-
-      // 5) upsert streak
-      const { error: upsertErr } = await supabase
-        .from('user_streaks')
-        .upsert(
-          {
-            address,
-            current_streak:  newStreak,
-            last_login_date: todayDate,
-            updated_at:      nowIso,
-          },
-          { onConflict: ['address'], returning: 'minimal' }
-        )
-      if (upsertErr) console.error('[Streak] streaks.upsert error', upsertErr)
-      else           console.log('[Streak] streaks.upsert OK, streak=', newStreak)
-
-      setLastUpserted(address)
     })()
   }, [address, lastUpserted])
 
@@ -148,12 +143,9 @@ export default function TopBar() {
         </button>
 
         {/* Wallet connect */}
-        <AlephiumConnectButton className="bg-amber hover:bg-amber/90 text-charcoal font-medium flex items-center px-4 py-2 rounded">
-          <WalletIcon className="w-4 h-4 mr-2" />
-          {address
-            ? `${address.slice(0, 6)}…${address.slice(-6)}`
-            : 'Connect Wallet'}
-        </AlephiumConnectButton>
+        <div className="bg-amber hover:bg-amber/90 text-charcoal font-medium flex items-center px-4 py-2 rounded">
+          <AlephiumConnectButton />
+        </div>
       </div>
 
       {/* Mobile nav panel */}
