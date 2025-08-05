@@ -23,6 +23,12 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
+function validateAddress(address: string): boolean {
+  // More lenient Alephium address validation
+  // Alephium addresses can be 26-35 characters long and contain alphanumeric characters
+  return /^[1-9A-HJ-NP-Za-km-z]{26,35}$/.test(address)
+}
+
 export async function POST(request: Request) {
   try {
     // Get client IP for rate limiting
@@ -44,6 +50,13 @@ export async function POST(request: Request) {
     if (!address || typeof address !== 'string') {
       return NextResponse.json(
         { error: 'Address is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!validateAddress(address)) {
+      return NextResponse.json(
+        { error: 'Invalid address format' },
         { status: 400 }
       )
     }

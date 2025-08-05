@@ -37,7 +37,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://backend.mainnet.alephium.org https://api.aimlapi.com https://*.supabase.co; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com https://pulse.walletconnect.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://backend.mainnet.alephium.org https://api.aimlapi.com https://*.supabase.co https://pulse.walletconnect.org wss://pulse.walletconnect.org https://relay.walletconnect.org wss://relay.walletconnect.org; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
           },
         ],
       },
