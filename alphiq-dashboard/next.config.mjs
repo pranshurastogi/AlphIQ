@@ -11,6 +11,9 @@ const nextConfig = {
   },
   // Security headers
   async headers() {
+    // Disable CSP in development to help with wallet connection
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    
     return [
       {
         source: '/(.*)',
@@ -35,10 +38,11 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains',
           },
-          {
+          // Only apply CSP in production
+          ...(isDevelopment ? [] : [{
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com https://pulse.walletconnect.org; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://backend.mainnet.alephium.org https://api.aimlapi.com https://*.supabase.co https://pulse.walletconnect.org wss://pulse.walletconnect.org https://relay.walletconnect.org wss://relay.walletconnect.org; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
-          },
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live https://va.vercel-scripts.com https://*.walletconnect.org https://*.walletconnect.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://backend.mainnet.alephium.org https://api.aimlapi.com https://*.supabase.co https://*.walletconnect.org wss://*.walletconnect.org https://*.walletconnect.com wss://*.walletconnect.com https://*.alephium.org; frame-src 'self' https://*.walletconnect.org; object-src 'none'; base-uri 'self'; form-action 'self';",
+          }]),
         ],
       },
     ]

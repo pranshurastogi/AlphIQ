@@ -6,6 +6,14 @@ export const config = {
     anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
   
+  // Debug environment variables
+  debug: {
+    envVars: {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'EXISTS' : 'MISSING',
+    }
+  },
+  
   // AI Service (server-side only)
   ai: {
     // Support both old and new variable names for transition
@@ -41,6 +49,10 @@ export const config = {
 
 // Validation function
 export function validateConfig() {
+  console.log('🔍 Config Validation Debug:')
+  console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'EXISTS' : 'MISSING')
+  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'EXISTS' : 'MISSING')
+  
   const requiredEnvVars = [
     'NEXT_PUBLIC_SUPABASE_URL',
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
@@ -51,7 +63,12 @@ export function validateConfig() {
   )
   
   if (missingVars.length > 0) {
-    throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`)
+    console.warn(`⚠️  Missing Supabase environment variables: ${missingVars.join(', ')}`)
+    console.warn('   XP components will use mock data only.')
+    console.warn('   To enable real data, create a .env.local file with:')
+    console.warn('   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url')
+    console.warn('   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key')
+    return false
   }
   
   // Check for AI API key (either old or new format)

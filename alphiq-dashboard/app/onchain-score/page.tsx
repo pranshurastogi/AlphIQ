@@ -29,6 +29,9 @@ import {
   Shield,
 } from "lucide-react"
 import { OnchainScoreCard } from "@/components/OnchainScoreCard"
+import { XPDisplay } from "@/components/XPDisplay"
+import { XPBreakdown } from "@/components/XPBreakdown"
+import { useWallet } from '@alephium/web3-react'
 
 
 const achievements = [
@@ -111,6 +114,12 @@ const scoreBreakdown = [
 ]
 
 export default function OnchainScorePage() {
+  const { account } = useWallet()
+  const address = typeof account === 'string' ? account : account?.address
+  
+  // Debug: log when address changes
+  console.log('🔗 Connected wallet address:', address)
+  
   const totalScore = scoreBreakdown.reduce((sum, item) => sum + item.points, 0)
   const maxTotalScore = scoreBreakdown.reduce((sum, item) => sum + item.maxPoints, 0)
 
@@ -152,36 +161,11 @@ export default function OnchainScorePage() {
             {/* 🎉 Streak Card */}
             <StreakCard />
 
-            {/* Score Breakdown */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lavender flex items-center">
-                  <Award className="w-5 h-5 mr-2" />
-                  Score Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {scoreBreakdown.map((item, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="text-neutral/70">{item.icon}</div>
-                        <span className="text-sm text-neutral/80">{item.category}</span>
-                      </div>
-                      <span className="text-neutral font-medium">
-                        {item.points}/{item.maxPoints}
-                      </span>
-                    </div>
-                    <div className="w-full bg-white/10 rounded-full h-2">
-                      <div
-                        className="h-2 bg-gradient-to-r from-mint to-amber rounded-full transition-all duration-1000"
-                        style={{ width: `${(item.points / item.maxPoints) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            {/* XP Display */}
+            <XPDisplay address={address} />
+
+            {/* XP Breakdown */}
+            <XPBreakdown address={address} />
 
             {/* Weekly Quests */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">

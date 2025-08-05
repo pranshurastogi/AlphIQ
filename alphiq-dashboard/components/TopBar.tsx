@@ -45,12 +45,26 @@ export default function TopBar() {
           console.error('[Streak] users.upsert error:', userErr.message)
         }
 
-        // 2) insert today's login
-        const { error: loginErr } = await supabase
+        // 2) check if today's login already exists, then insert if not
+        const { data: existingLogin, error: checkErr } = await supabase
           .from('user_logins')
-          .insert([{ address, login_date: todayDate }])
-        if (loginErr) {
-          console.error('[Streak] logins.insert error:', loginErr.message)
+          .select('address')
+          .eq('address', address)
+          .eq('login_date', todayDate)
+          .single()
+        
+        if (checkErr && checkErr.code !== 'PGRST116') {
+          console.error('[Streak] login check error:', checkErr.message)
+        }
+
+        // Only insert if no existing login for today
+        if (!existingLogin) {
+          const { error: loginErr } = await supabase
+            .from('user_logins')
+            .insert([{ address, login_date: todayDate }])
+          if (loginErr) {
+            console.error('[Streak] logins.insert error:', loginErr.message)
+          }
         }
 
         // 3) fetch streak
