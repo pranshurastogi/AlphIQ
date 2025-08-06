@@ -1,6 +1,16 @@
 // app/api/ai-analysis/route.ts
 import { NextResponse } from 'next/server'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 // Rate limiting helper
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
 
@@ -24,9 +34,9 @@ function checkRateLimit(ip: string): boolean {
 }
 
 function validateAddress(address: string): boolean {
-  // More lenient Alephium address validation
-  // Alephium addresses can be 26-35 characters long and contain alphanumeric characters
-  return /^[1-9A-HJ-NP-Za-km-z]{26,35}$/.test(address)
+  // Alephium address validation - accept longer addresses
+  // Alephium addresses can be alphanumeric and vary in length
+  return /^[1-9A-HJ-NP-Za-km-z]+$/.test(address) && address.length >= 26
 }
 
 export async function POST(request: Request) {
@@ -64,12 +74,17 @@ export async function POST(request: Request) {
     // Check if API key is available
     const AIML_API_KEY = process.env.AIML_API_KEY
     if (!AIML_API_KEY) {
-      console.error('[AI Analysis] Missing AIML_API_KEY')
+      safeLog('error', '[AI Analysis] Missing AIML_API_KEY')
       return NextResponse.json(
         { error: 'Service temporarily unavailable' },
         { status: 503 }
       )
     }
+
+    // Debug API key status
+    safeLog('log', '[AI Analysis] API Key exists:', !!AIML_API_KEY)
+    safeLog('log', '[AI Analysis] API Key length:', AIML_API_KEY?.length || 0)
+    safeLog('log', '[AI Analysis] API Key first 10 chars:', AIML_API_KEY?.slice(0, 10))
 
     // Fetch transactions with timeout
     const controller = new AbortController()
@@ -88,7 +103,7 @@ export async function POST(request: Request) {
     clearTimeout(timeoutId)
 
     if (!txRes.ok) {
-      console.error(`[AI Analysis] Transaction fetch failed: ${txRes.status}`)
+      safeLog('error', `[AI Analysis] Transaction fetch failed: ${txRes.status}`)
       return NextResponse.json(
         { error: 'Failed to fetch transaction data' },
         { status: 502 }
@@ -105,9 +120,9 @@ export async function POST(request: Request) {
       .map(tx => ({
         hash: tx.hash,
         date: new Date(tx.timestamp).toLocaleDateString(),
-        in: Number(BigInt(tx.inputs?.[0]?.attoAlphAmount ?? '0') / 10n**18n),
-        out: Number(BigInt(tx.outputs?.[0]?.attoAlphAmount ?? '0') / 10n**18n),
-        fee: Number((BigInt(tx.gasAmount) * BigInt(tx.gasPrice)) / 10n**18n)
+        in: Number(BigInt(tx.inputs?.[0]?.attoAlphAmount ?? '0') / BigInt('1000000000000000000')),
+        out: Number(BigInt(tx.outputs?.[0]?.attoAlphAmount ?? '0') / BigInt('1000000000000000000')),
+        fee: Number((BigInt(tx.gasAmount) * BigInt(tx.gasPrice)) / BigInt('1000000000000000000'))
       }))
 
     // Build prompt
@@ -139,7 +154,16 @@ ${JSON.stringify(recent, null, 2)}
     })
 
     if (!aiRes.ok) {
-      console.error(`[AI Analysis] AI API error: ${aiRes.status}`)
+      safeLog('error', `[AI Analysis] AI API error: ${aiRes.status}`)
+      safeLog('error', `[AI Analysis] AI API response:`, await aiRes.text())
+      
+      if (aiRes.status === 401) {
+        return NextResponse.json(
+          { error: 'AI API key is invalid or missing' },
+          { status: 401 }
+        )
+      }
+      
       return NextResponse.json(
         { error: 'AI analysis service unavailable' },
         { status: 502 }
@@ -151,10 +175,10 @@ ${JSON.stringify(recent, null, 2)}
 
     return NextResponse.json({ summary })
   } catch (error) {
-    console.error('[AI Analysis] Error:', error)
+    safeLog('error', '[AI Analysis] Error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }
-} 
+}

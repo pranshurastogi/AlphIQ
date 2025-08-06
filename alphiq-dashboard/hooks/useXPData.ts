@@ -4,6 +4,16 @@ import { useEffect, useState } from 'react'
 import { supabase, testSupabaseConnection } from '@/lib/supabaseClient'
 import { config } from '@/lib/config'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 export interface XPHistory {
   id: number
   user_address: string
@@ -61,11 +71,11 @@ export function useXPData(address?: string) {
         setError(null)
 
         // Test Supabase connection first
-        console.log('🔍 Testing Supabase connection...')
+        safeLog('log', '🔍 Testing Supabase connection...')
         const connectionTest = await testSupabaseConnection()
         
         if (!connectionTest) {
-          console.error('❌ Supabase connection failed, using mock data')
+          safeLog('error', '❌ Supabase connection failed, using mock data')
           // Use mock data when connection fails
           const mockUserData = {
             address: address,
@@ -130,40 +140,40 @@ export function useXPData(address?: string) {
           return
         }
         
-                console.log('✅ Supabase connection successful, fetching real data...')
+        safeLog('log', '✅ Supabase connection successful, fetching real data...')
 
         // Fetch user's total XP
-        console.log('🔍 Attempting to fetch user data for address:', address)
+        safeLog('log', '🔍 Attempting to fetch user data for address:', address)
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('address, admin_total_xp, title')
           .eq('address', address)
           .maybeSingle()
 
-        console.log('User data:', userData, 'Error:', userError)
+        safeLog('log', 'User data:', userData, 'Error:', userError)
         
         if (!userData) {
-          console.log('⚠️  User not found in database, using mock data')
+          safeLog('log', '⚠️  User not found in database, using mock data')
         }
 
         // Fetch XP levels to calculate user's current level
-        console.log('🔍 Fetching XP levels from database...')
+        safeLog('log', '🔍 Fetching XP levels from database...')
         const { data: levelsData, error: levelsError } = await supabase
           .from('admin_xp_levels')
           .select('*')
           .order('level', { ascending: true })
 
-        console.log('Levels data:', levelsData, 'Error:', levelsError)
+        safeLog('log', 'Levels data:', levelsData, 'Error:', levelsError)
         if (levelsData && levelsData.length > 0) {
-          console.log('📊 Available XP levels:', levelsData.map(l => `${l.name} (${l.xp_min}-${l.xp_max} XP)`))
+          safeLog('log', '📊 Available XP levels:', levelsData.map(l => `${l.name} (${l.xp_min}-${l.xp_max} XP)`))
         } else {
-          console.log('⚠️  No XP levels found in database')
+          safeLog('log', '⚠️  No XP levels found in database')
         }
 
         // Calculate user's level based on total XP using database levels
         const calculateUserLevel = (totalXP: number) => {
           if (!levelsData || levelsData.length === 0) {
-            console.warn('⚠️  No XP levels found in database, using fallback')
+            safeLog('warn', '⚠️  No XP levels found in database, using fallback')
             return { level: 1, name: "Novice", color: "text-blue-400" }
           }
           
@@ -176,7 +186,7 @@ export function useXPData(address?: string) {
           )
           
           if (userLevel) {
-            console.log(`🎯 User level calculated: ${userLevel.name} (Level ${userLevel.level})`)
+            safeLog('log', `🎯 User level calculated: ${userLevel.name} (Level ${userLevel.level})`)
             return {
               level: userLevel.level,
               name: userLevel.name,
@@ -196,7 +206,7 @@ export function useXPData(address?: string) {
           
           // If user XP is above all levels, return the highest level
           const highestLevel = sortedLevels[sortedLevels.length - 1]
-          console.log(`🏆 User exceeds max level, using: ${highestLevel.name}`)
+          safeLog('log', `🏆 User exceeds max level, using: ${highestLevel.name}`)
           return {
             level: highestLevel.level,
             name: highestLevel.name,
@@ -205,7 +215,7 @@ export function useXPData(address?: string) {
         }
 
         // Fetch approved quest submissions for this user
-        console.log('🔍 Attempting to fetch submissions data for address:', address)
+        safeLog('log', '🔍 Attempting to fetch submissions data for address:', address)
         const { data: submissionsData, error: submissionsError } = await supabase
           .from('admin_quest_submissions')
           .select(`
@@ -222,11 +232,11 @@ export function useXPData(address?: string) {
           .order('submitted_at', { ascending: false })
           .limit(10)
 
-        console.log('Submissions data:', submissionsData, 'Error:', submissionsError)
+        safeLog('log', 'Submissions data:', submissionsData, 'Error:', submissionsError)
         if (submissionsData && submissionsData.length > 0) {
-          console.log('📊 Found submissions:', submissionsData.length)
+          safeLog('log', '📊 Found submissions:', submissionsData.length)
         } else {
-          console.log('⚠️  No approved submissions found for this user')
+          safeLog('log', '⚠️  No approved submissions found for this user')
         }
         if (submissionsError) throw submissionsError
 
@@ -257,13 +267,13 @@ export function useXPData(address?: string) {
           levelColor: levelInfo.color
         }
 
-        console.log('Final user data:', finalUserData)
+        safeLog('log', 'Final user data:', finalUserData)
 
-        console.log('Final history data:', transformedHistory)
+        safeLog('log', 'Final history data:', transformedHistory)
         setUserXP(finalUserData)
         setXpHistory(transformedHistory)
       } catch (err) {
-        console.error('Error fetching XP data:', err)
+        safeLog('error', 'Error fetching XP data:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch XP data')
       } finally {
         setIsLoading(false)

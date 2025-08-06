@@ -15,6 +15,16 @@ import {
 import { Loader2 } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 type HistoryRow = {
   snapshot_date: string // ISO date string
   score: number
@@ -46,7 +56,7 @@ export function ScoreHistoryChart() {
       .order('snapshot_date', { ascending: true })
       .then(({ data: rows, error: e }) => {
         if (e) {
-          console.error('[ScoreHistoryChart] fetch:', e)
+          safeLog('error', '[ScoreHistoryChart] fetch:', e)
           setError('Failed to load history')
         } else if (rows) {
           // group by month
@@ -62,7 +72,7 @@ export function ScoreHistoryChart() {
         }
       })
       .catch((e) => {
-        console.error('[ScoreHistoryChart] unexpected:', e)
+        safeLog('error', '[ScoreHistoryChart] unexpected:', e)
         setError('Unexpected error')
       })
       .finally(() => setLoading(false))

@@ -6,7 +6,7 @@ export const config = {
     anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
   
-  // Debug environment variables
+  // Debug environment variables (only in development)
   debug: {
     envVars: {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -47,11 +47,23 @@ export const config = {
   },
 }
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 // Validation function
 export function validateConfig() {
-  console.log('🔍 Config Validation Debug:')
-  console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'EXISTS' : 'MISSING')
-  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'EXISTS' : 'MISSING')
+  if (isDevelopment()) {
+    safeLog('log', '🔍 Config Validation Debug:')
+    safeLog('log', 'NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'EXISTS' : 'MISSING')
+    safeLog('log', 'NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'EXISTS' : 'MISSING')
+  }
   
   const requiredEnvVars = [
     'NEXT_PUBLIC_SUPABASE_URL',
@@ -63,18 +75,18 @@ export function validateConfig() {
   )
   
   if (missingVars.length > 0) {
-    console.warn(`⚠️  Missing Supabase environment variables: ${missingVars.join(', ')}`)
-    console.warn('   XP components will use mock data only.')
-    console.warn('   To enable real data, create a .env.local file with:')
-    console.warn('   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url')
-    console.warn('   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key')
+    safeLog('warn', `⚠️  Missing Supabase environment variables: ${missingVars.join(', ')}`)
+    safeLog('warn', '   XP components will use mock data only.')
+    safeLog('warn', '   To enable real data, create a .env.local file with:')
+    safeLog('warn', '   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url')
+    safeLog('warn', '   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key')
     return false
   }
   
   // Check for AI API key (either old or new format)
   if (!config.ai.apiKey) {
-    console.warn('⚠️  AIML_API_KEY not found. AI analysis will not work.')
-    console.warn('   Please set AIML_API_KEY (server-side) or NEXT_PUBLIC_AIMLAPI_KEY (client-side)')
+    safeLog('warn', '⚠️  AIML_API_KEY not found. AI analysis will not work.')
+    safeLog('warn', '   Please set AIML_API_KEY (server-side) or NEXT_PUBLIC_AIMLAPI_KEY (client-side)')
   }
   
   // Validate Supabase URL format

@@ -12,6 +12,16 @@ import {
 } from '@/components/ui/card'
 import { Calendar, CheckCircle2 } from 'lucide-react'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 type StreakRow = {
   current_streak: number
   last_login_date: string // "YYYY-MM-DD"
@@ -37,7 +47,7 @@ export function StreakCard() {
       .single()
       .then(({ data, error: e }) => {
         if (e && e.code !== 'PGRST116') {
-          console.error('[StreakCard] fetch:', e)
+          safeLog('error', '[StreakCard] fetch:', e)
           setError('Could not load streak')
         } else {
           setStreak({
@@ -47,7 +57,7 @@ export function StreakCard() {
         }
       })
       .catch((e) => {
-        console.error('[StreakCard] unexpected:', e)
+        safeLog('error', '[StreakCard] unexpected:', e)
         setError('Unexpected error')
       })
       .finally(() => setLoading(false))

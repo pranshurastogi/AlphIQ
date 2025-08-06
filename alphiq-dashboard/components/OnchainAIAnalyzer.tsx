@@ -1,4 +1,3 @@
-// components/OnchainAIAnalyzer.tsx
 'use client'
 
 import { useState } from 'react'
@@ -8,10 +7,34 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 
-function validateAddress(address: string): boolean {
-  // More lenient Alephium address validation
-  // Alephium addresses can be 26-35 characters long and contain alphanumeric characters
-  return /^[1-9A-HJ-NP-Za-km-z]{26,35}$/.test(address)
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
+const EXPLORER_API = 'https://backend.mainnet.alephium.org'
+const AIML_API_URL = 'https://api.aimlapi.com/v1/chat/completions'
+const AIML_MODEL   = 'google/gemma-3n-e4b-it'
+const AIML_API_KEY = process.env.AIML_API_KEY
+
+// Debug API key status
+if (isDevelopment()) {
+  safeLog('log', '[OnchainAI] API Key exists:', !!AIML_API_KEY)
+  safeLog('log', '[OnchainAI] API Key length:', AIML_API_KEY?.length || 0)
+}
+
+function attoToAlph(atto: string): number {
+  try { 
+    const attoBigInt = BigInt(atto)
+    const divisor = BigInt('1000000000000000000') // 10^18
+    return Number(attoBigInt / divisor)
+  }
+  catch { return 0 }
 }
 
 export function OnchainAIAnalyzer() {
@@ -20,19 +43,11 @@ export function OnchainAIAnalyzer() {
 
   const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState<string>('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError]     = useState<string | null>(null)
 
   const handleSummarize = async () => {
     if (!address) {
       setError('🔗 Please connect your wallet first.')
-      return
-    }
-
-    // Debug: log the address to see its format
-    console.log('[OnchainAI] Address format:', address, 'Length:', address?.length)
-
-    if (!validateAddress(address)) {
-      setError(`Invalid wallet address format. Address: ${address?.slice(0, 10)}...`)
       return
     }
 
@@ -58,8 +73,8 @@ export function OnchainAIAnalyzer() {
       const data = await response.json()
       setSummary(data.summary || 'No insights available.')
     } catch (e: any) {
-      console.error('[OnchainAI] Error:', e.message)
-      setError(e.message || 'Failed to analyze wallet data.')
+      safeLog('error', '[OnchainAI] Error:', e)
+      setError(e.message)
     } finally {
       setLoading(false)
     }

@@ -3,6 +3,16 @@
 
 import useSWR from 'swr'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 export type NetworkStats = {
   totalTx: number
   hashratePh: number
@@ -45,7 +55,7 @@ const fetchNetworkStats = async (): Promise<NetworkStats> => {
 
     return { totalTx, hashratePh, totalAlph, circulatingAlph }
   } catch (err: any) {
-    console.error('[NetworkStats] fetch error:', err.message)
+    safeLog('error', '[NetworkStats] fetch error:', err.message)
     return { totalTx: 0, hashratePh: 0, totalAlph: 0, circulatingAlph: 0 }
   }
 }

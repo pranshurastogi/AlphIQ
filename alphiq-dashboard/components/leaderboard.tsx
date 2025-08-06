@@ -8,6 +8,16 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Crown, Medal, Award, TrendingUp } from 'lucide-react'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 type User = {
   address: string
   score: number
@@ -16,13 +26,19 @@ type User = {
 }
 
 const fetchLeaderboard = async (): Promise<User[]> => {
-  const { data, error } = await supabase
-    .from<User>('users')
-    .select('address,score,title,joined_at')
-    .order('score', { ascending: false })    // highest first
-    .order('joined_at', { ascending: true }) // tiebreaker: earliest join
-  if (error) throw error
-  return data ?? []
+  try {
+    const { data, error } = await supabase
+      .from<User>('users')
+      .select('address,score,title,joined_at')
+      .order('score', { ascending: false })    // highest first
+      .order('joined_at', { ascending: true }) // tiebreaker: earliest join
+    
+    if (error) throw error
+    return data ?? []
+  } catch (error) {
+    safeLog('error', '[Leaderboard] fetch error', error)
+    throw error
+  }
 }
 
 export function Leaderboard() {
@@ -31,11 +47,35 @@ export function Leaderboard() {
   const { data: users, error } = useSWR('leaderboard', fetchLeaderboard)
 
   if (error) {
-    console.error('[Leaderboard] fetch error', error)
-    return <div className="text-red-400 p-4">Failed to load leaderboard.</div>
+    return (
+      <Card className="bg-card/50 border-red-400 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-red-400 flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2" />
+            Global Leaderboard
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-red-400 text-sm">Failed to load leaderboard.</p>
+        </CardContent>
+      </Card>
+    )
   }
+  
   if (!users) {
-    return <div className="text-neutral/60 p-4">Loading leaderboard…</div>
+    return (
+      <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-amber flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2" />
+            Global Leaderboard
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-neutral/60 text-sm">Loading leaderboard…</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   const topUsers = users.slice(0, 10)

@@ -15,6 +15,16 @@ import {
 import { AlephiumConnectButton, useWallet } from '@alephium/web3-react'
 import { supabase } from '@/lib/supabaseClient'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 export default function TopBar() {
   const { account } = useWallet()
   const address = typeof account === 'string' ? account : account?.address
@@ -42,7 +52,7 @@ export default function TopBar() {
             { onConflict: 'address' }
           )
         if (userErr) {
-          console.error('[Streak] users.upsert error:', userErr.message)
+          safeLog('error', '[Streak] users.upsert error:', userErr.message)
         }
 
         // 2) check if today's login already exists, then insert if not
@@ -54,7 +64,7 @@ export default function TopBar() {
           .single()
         
         if (checkErr && checkErr.code !== 'PGRST116') {
-          console.error('[Streak] login check error:', checkErr.message)
+          safeLog('error', '[Streak] login check error:', checkErr.message)
         }
 
         // Only insert if no existing login for today
@@ -63,7 +73,7 @@ export default function TopBar() {
             .from('user_logins')
             .insert([{ address, login_date: todayDate }])
           if (loginErr) {
-            console.error('[Streak] logins.insert error:', loginErr.message)
+            safeLog('error', '[Streak] logins.insert error:', loginErr.message)
           }
         }
 
@@ -75,7 +85,7 @@ export default function TopBar() {
           .single()
         
         if (getStreakErr && getStreakErr.code !== 'PGRST116') {
-          console.error('[Streak] fetch error:', getStreakErr.message)
+          safeLog('error', '[Streak] fetch error:', getStreakErr.message)
         }
 
         // 4) compute new streak
@@ -101,12 +111,12 @@ export default function TopBar() {
             { onConflict: 'address' }
           )
         if (upsertErr) {
-          console.error('[Streak] streaks.upsert error:', upsertErr.message)
+          safeLog('error', '[Streak] streaks.upsert error:', upsertErr.message)
         }
 
         setLastUpserted(address)
       } catch (error) {
-        console.error('[Streak] Unexpected error:', error)
+        safeLog('error', '[Streak] Unexpected error:', error)
       }
     })()
   }, [address, lastUpserted])

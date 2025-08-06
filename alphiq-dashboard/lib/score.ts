@@ -3,6 +3,16 @@ import { supabase } from './supabaseClient'
 
 const EXPLORER_API = 'https://backend.mainnet.alephium.org'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 // —— Titles (50 increasing levels) ——
 const TITLES = [
   "Chain Novice","Block Beginner","Tx Trainee","Ledger Learner","Byte Voyager",
@@ -25,6 +35,7 @@ function pickTitle(score: number): string {
 export async function computeAndStoreScore(address: string): Promise<{ score: number; title: string }> {
   const today = new Date().toISOString().slice(0, 10)      // YYYY-MM-DD
   const nowIso = new Date().toISOString()
+  
   try {
     // 1) fetch address stats
     const resAddr = await fetch(`${EXPLORER_API}/addresses/${address}`)
@@ -38,7 +49,7 @@ export async function computeAndStoreScore(address: string): Promise<{ score: nu
     // convert to ALPH
     const balanceAtto = BigInt(balStr)
     const balance = Number(balanceAtto / 10n ** 18n)
-    console.log(`[score] ${address} → balance=${balance} ALPH, txNumber=${txNumber}`)
+    safeLog('log', `[score] ${address} → balance=${balance} ALPH, txNumber=${txNumber}`)
 
     // 2) balance‐based component
     let balScore = 0
@@ -55,7 +66,7 @@ export async function computeAndStoreScore(address: string): Promise<{ score: nu
     } else if (balance > 10000) {
       balScore = txNumber < 10 ? -100 : 700 + txNumber
     }
-    console.log(`[score] ${address} → balanceScore=${balScore}`)
+    safeLog('log', `[score] ${address} → balanceScore=${balScore}`)
 
     // 3) time‐based component: months since first tx
     let ageScore = 0
@@ -70,16 +81,16 @@ export async function computeAndStoreScore(address: string): Promise<{ score: nu
         else if (months <= 36) ageScore = 12 * 15 + (months - 12) * 7
         else ageScore = 12 * 15 + 24 * 7 + (months - 36) * 5
       }
-      console.log(`[score] ${address} → ageScore=${ageScore}`)
+      safeLog('log', `[score] ${address} → ageScore=${ageScore}`)
     } catch (e) {
-      console.error('[score] fetching tx history failed:', (e as Error).message)
+      safeLog('error', '[score] fetching tx history failed:', (e as Error).message)
     }
 
     // 4) combine & clamp
     const raw = balScore + ageScore
     let finalScore = Math.min(1000, Math.max(0, raw))
     const title = pickTitle(finalScore)
-    console.log(`[score] ${address} → raw=${raw}, finalScore=${finalScore}, title="${title}"`)
+    safeLog('log', `[score] ${address} → raw=${raw}, finalScore=${finalScore}, title="${title}"`)
 
     // 5) upsert into users
     const { error: uErr } = await supabase
@@ -88,7 +99,7 @@ export async function computeAndStoreScore(address: string): Promise<{ score: nu
         { address, score: finalScore, title, updated_at: nowIso },
         { onConflict: ['address'], returning: 'minimal' }
       )
-    if (uErr) console.error('[score] users.upsert error:', uErr)
+    if (uErr) safeLog('error', '[score] users.upsert error:', uErr)
 
     // 6) upsert into history (no nulls)
     const { error: hErr } = await supabase
@@ -104,11 +115,11 @@ export async function computeAndStoreScore(address: string): Promise<{ score: nu
         },
         { onConflict: ['address', 'snapshot_date'], returning: 'minimal' }
       )
-    if (hErr) console.error('[score] user_score_history.upsert error:', hErr)
+    if (hErr) safeLog('error', '[score] user_score_history.upsert error:', hErr)
 
     return { score: finalScore, title }
   } catch (e) {
-    console.error('[computeAndStoreScore] fatal:', (e as Error).message)
+    safeLog('error', '[computeAndStoreScore] fatal:', (e as Error).message)
     return { score: 0, title: TITLES[0] }
   }
 }

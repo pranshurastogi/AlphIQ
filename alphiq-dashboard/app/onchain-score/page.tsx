@@ -33,6 +33,15 @@ import { XPDisplay } from "@/components/XPDisplay"
 import { XPBreakdown } from "@/components/XPBreakdown"
 import { useWallet } from '@alephium/web3-react'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
 
 const achievements = [
   {
@@ -117,8 +126,8 @@ export default function OnchainScorePage() {
   const { account } = useWallet()
   const address = typeof account === 'string' ? account : account?.address
   
-  // Debug: log when address changes
-  console.log('🔗 Connected wallet address:', address)
+  // Debug: log when address changes (development only)
+  safeLog('log', '🔗 Connected wallet address:', address)
   
   const totalScore = scoreBreakdown.reduce((sum, item) => sum + item.points, 0)
   const maxTotalScore = scoreBreakdown.reduce((sum, item) => sum + item.maxPoints, 0)

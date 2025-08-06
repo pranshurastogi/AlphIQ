@@ -3,8 +3,8 @@ import './globals.css'
 import { AlephiumWalletProvider } from '@alephium/web3-react'
 import TopBar from '@/components/TopBar'
 import { Footer } from '@/components/Footer'
-import { Analytics } from '@vercel/analytics/next';
-
+import { Analytics } from '@vercel/analytics/next'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export const metadata = {
   title: 'AlphIQ Dashboard',
@@ -20,11 +20,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           theme="retro"
           network="mainnet"
         >
-          {/* Shared header with Connect button */}
-          <TopBar />
+          {/* Error boundary to catch any unhandled errors */}
+          <ErrorBoundary>
+            {/* Shared header with Connect button */}
+            <TopBar />
 
-          {/* Page content */}
-          {children}
+            {/* Page content */}
+            {children}
+          </ErrorBoundary>
         </AlephiumWalletProvider>
         <Analytics />
         <Footer />

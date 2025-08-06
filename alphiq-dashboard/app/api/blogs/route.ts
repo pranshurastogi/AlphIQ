@@ -1,6 +1,16 @@
 // app/api/blogs/route.ts
 import { NextResponse } from 'next/server'
 
+// Helper function to check if we're in development
+const isDevelopment = () => process.env.NODE_ENV === 'development'
+
+// Safe logging function that only logs in development
+const safeLog = (level: 'log' | 'warn' | 'error', ...args: any[]) => {
+  if (isDevelopment()) {
+    console[level](...args)
+  }
+}
+
 // Rate limiting helper
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
 
@@ -51,7 +61,7 @@ export async function GET(request: Request) {
     clearTimeout(timeoutId)
 
     if (!res.ok) {
-      console.error(`[Blogs API] Medium fetch failed: ${res.status}`)
+      safeLog('error', `[Blogs API] Medium fetch failed: ${res.status}`)
       return NextResponse.json(
         { error: 'Failed to fetch blog feed' },
         { status: 502 }
@@ -62,7 +72,7 @@ export async function GET(request: Request) {
 
     // Validate XML content
     if (!xml.includes('<rss') && !xml.includes('<feed')) {
-      console.error('[Blogs API] Invalid RSS feed format')
+      safeLog('error', '[Blogs API] Invalid RSS feed format')
       return NextResponse.json(
         { error: 'Invalid feed format' },
         { status: 502 }
@@ -100,7 +110,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ posts: items })
   } catch (error) {
-    console.error('[Blogs API] Error:', error)
+    safeLog('error', '[Blogs API] Error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

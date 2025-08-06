@@ -55,7 +55,7 @@ export default function AlphIQDashboard() {
           <div className="col-span-12 lg:col-span-3 space-y-6">
             <LiveStats />
             <WalletProfiler />
-            {/* ← New Token Distribution (“Gini”) */}
+            {/* ← New Token Distribution ("Gini") */}
             <TokenDistributionCard />
           </div>
 
