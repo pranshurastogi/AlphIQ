@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useWallet } from '@alephium/web3-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LiveStats } from '@/components/LiveStats'
@@ -13,10 +14,10 @@ import { BlogFeed } from '@/components/BlogFeed'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { AnimatedGauge } from '@/components/animated-gauge'
-import { ProgressBar } from '@/components/progress-bar'
 import { OnchainScoreCard } from '@/components/OnchainScoreCard'
 import { OnchainAIAnalyzer } from '@/components/OnchainAIAnalyzer'
 import { QuestOfDay } from '@/components/QuestOfDay'
+import { ScoreBreakdown } from '@/components/ScoreBreakdown'
 
 import {
   Activity,
@@ -46,6 +47,8 @@ const missions = [
 
 export default function AlphIQDashboard() {
   const [contractId, setContractId] = useState('')
+  const { account: acctObj } = useWallet()
+  const address = typeof acctObj === 'string' ? acctObj : acctObj?.address
 
   return (
     <div className="min-h-screen bg-charcoal text-neutral">
@@ -84,17 +87,7 @@ export default function AlphIQDashboard() {
             <OnchainScoreCard />
 
             {/* Score Breakdown */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-neutral/80 text-sm">Score Breakdown</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ProgressBar value={180} maxValue={250} label="📦 Transaction Activity" color="mint" />
-                <ProgressBar value={220} maxValue={300} label="🧠 Smart Contract Interactions" color="amber" />
-                <ProgressBar value={150} maxValue={200} label="🧑‍💻 Developer Contributions" color="lavender" />
-                <ProgressBar value={290} maxValue={350} label="🧭 Community & Quests" color="mint" />
-              </CardContent>
-            </Card>
+            {address && <ScoreBreakdown address={address} />}
 
             {/* Progress & Missions */}
             <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
