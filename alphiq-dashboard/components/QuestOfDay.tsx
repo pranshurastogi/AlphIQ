@@ -15,11 +15,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Flame, Calendar, Users, ArrowRight,
   CheckCircle2, Clock, XCircle, Loader2,
   Trophy, Zap, Target, Star, Activity, Wallet, Layers, Award, Code,
-  ExternalLink, Info, AlertCircle, CheckCircle, Eye, EyeOff
+  ExternalLink, Info, AlertCircle, CheckCircle, Eye, EyeOff, Plus, Minus,
+  Share2, Twitter, Copy, Check
 } from 'lucide-react'
 
 interface Quest {
@@ -40,6 +42,31 @@ interface Submission {
   status: 'pending' | 'approved' | 'rejected'
   review_notes?: string | null
   submitted_at: string
+}
+
+// Structured participation data interface
+interface ParticipationData {
+  transaction_details?: {
+    hash?: string
+    block_number?: number
+    gas_used?: string
+    timestamp?: string
+  }
+  social_media?: {
+    platform?: string
+    post_url?: string
+    username?: string
+  }
+  wallet_info?: {
+    address?: string
+    balance?: string
+    tokens_held?: string[]
+  }
+  additional_context?: {
+    description?: string
+    screenshots?: string[]
+    notes?: string
+  }
 }
 
 // Returns a Lucide icon component based on quest title
@@ -90,6 +117,164 @@ function StatusBadge({ status, reviewNotes }: { status: string, reviewNotes?: st
   )
 }
 
+// URL validation function
+function isValidUrl(url: string): boolean {
+  try {
+    const urlObj = new URL(url)
+    return ['http:', 'https:'].includes(urlObj.protocol)
+  } catch {
+    return false
+  }
+}
+
+// Get URL preview data
+function getUrlPreview(url: string) {
+  if (!isValidUrl(url)) return null
+  
+  try {
+    const urlObj = new URL(url)
+    return {
+      domain: urlObj.hostname,
+      path: urlObj.pathname,
+      protocol: urlObj.protocol
+    }
+  } catch {
+    return null
+  }
+}
+
+// Share functionality component
+function ShareQuest({ quest }: { quest: Quest }) {
+  const [showShareOptions, setShowShareOptions] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const questUrl = `${window.location.origin}/quests/${quest.id}`
+  
+  const shareText = `🔥 New Quest Alert! 🚀\n\n${quest.title}\n${quest.description}\n\n💰 XP Reward: ${quest.xp_reward} XP\n🏢 Partner: ${quest.partner_name}\n\nJoin the challenge: ${questUrl}\n\n#AlphIQ #Quest #Web3 #Alephium`
+
+  const shareToTwitter = () => {
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
+    window.open(twitterUrl, '_blank', 'width=600,height=400')
+    setShowShareOptions(false)
+  }
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(shareText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy: ', err)
+    }
+  }
+
+  const shareToSocial = (platform: string) => {
+    let shareUrl = ''
+    
+    switch (platform) {
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
+        break
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(questUrl)}&title=${encodeURIComponent(quest.title)}&summary=${encodeURIComponent(quest.description)}`
+        break
+      case 'telegram':
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(questUrl)}&text=${encodeURIComponent(shareText)}`
+        break
+      case 'discord':
+        // Discord doesn't have a direct share URL, so we'll copy the text
+        copyToClipboard()
+        return
+      default:
+        return
+    }
+    
+    window.open(shareUrl, '_blank', 'width=600,height=400')
+    setShowShareOptions(false)
+  }
+
+  return (
+    <div className="relative">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowShareOptions(!showShareOptions)}
+              className="h-8 w-8 p-0 hover:bg-amber/10"
+            >
+              <Share2 className="w-4 h-4 text-neutral/60 hover:text-amber" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-sm">Share this quest</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {showShareOptions && (
+        <div className="absolute top-full right-0 mt-2 bg-card/95 border border-white/20 rounded-lg shadow-lg backdrop-blur-sm z-10 min-w-[200px]">
+          <div className="p-3 space-y-2">
+            <div className="text-xs font-medium text-neutral/80 mb-2">Share Quest</div>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => shareToSocial('twitter')}
+              className="w-full justify-start text-xs hover:bg-blue/10"
+            >
+              <Twitter className="w-4 h-4 mr-2 text-blue/70" />
+              Share on X (Twitter)
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => shareToSocial('telegram')}
+              className="w-full justify-start text-xs hover:bg-blue/10"
+            >
+              <ExternalLink className="w-4 h-4 mr-2 text-blue/70" />
+              Share on Telegram
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => shareToSocial('discord')}
+              className="w-full justify-start text-xs hover:bg-purple/10"
+            >
+              <ExternalLink className="w-4 h-4 mr-2 text-purple/70" />
+              Copy for Discord
+            </Button>
+            
+            <Separator className="bg-white/10" />
+            
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={copyToClipboard}
+              className="w-full justify-start text-xs hover:bg-green/10"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 mr-2 text-green/70" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 mr-2 text-neutral/60" />
+                  Copy Text
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function QuestOfDay() {
   const { account } = useWallet()
   const userAddress = typeof account === 'string' ? account : account?.address || null
@@ -100,9 +285,10 @@ export function QuestOfDay() {
   const [error, setError] = useState<string | null>(null)
   const [openForm, setOpenForm] = useState<number | null>(null)
   const [proofUrl, setProofUrl] = useState('')
-  const [proofData, setProofData] = useState('')
+  const [participationData, setParticipationData] = useState<ParticipationData>({})
   const [submitting, setSubmitting] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [activeTab, setActiveTab] = useState('transaction')
 
   useEffect(() => {
     async function init() {
@@ -153,6 +339,11 @@ export function QuestOfDay() {
       setError('Proof URL is required.')
       return
     }
+
+    if (!isValidUrl(proofUrl.trim())) {
+      setError('Please provide a valid URL for proof.')
+      return
+    }
     
     setSubmitting(true)
     setError(null)
@@ -164,16 +355,13 @@ export function QuestOfDay() {
         proof_url: proofUrl.trim(),
       }
 
-      // Only include proof_data if it's valid JSON
-      if (proofData.trim()) {
-        try {
-          const parsedData = JSON.parse(proofData.trim())
-          submissionData.proof_data = parsedData
-        } catch (e) {
-          setError('Invalid JSON format in additional data.')
-          setSubmitting(false)
-          return
-        }
+      // Only include proof_data if there's actual data
+      const hasData = Object.values(participationData).some(section => 
+        section && typeof section === 'object' && Object.keys(section).length > 0
+      )
+
+      if (hasData) {
+        submissionData.proof_data = participationData
       }
 
       const { data: newSub, error: subErr } = await supabase
@@ -186,7 +374,8 @@ export function QuestOfDay() {
       setSubs(prev => ({ ...prev, [questId]: newSub! }))
       setOpenForm(null)
       setProofUrl('')
-      setProofData('')
+      setParticipationData({})
+      setActiveTab('transaction')
     } catch (e: any) {
       setError(e.message || 'Submission failed.')
     } finally {
@@ -194,28 +383,44 @@ export function QuestOfDay() {
     }
   }
 
-  const validateUrl = (url: string) => {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      return false
-    }
+  const updateParticipationData = (section: keyof ParticipationData, field: string, value: string) => {
+    setParticipationData(prev => {
+      const currentSection = prev[section] as Record<string, any> || {}
+      return {
+        ...prev,
+        [section]: {
+          ...currentSection,
+          [field]: value
+        }
+      }
+    })
   }
 
-  const getUrlPreview = (url: string) => {
-    if (!validateUrl(url)) return null
-    
-    try {
-      const urlObj = new URL(url)
-      return {
-        domain: urlObj.hostname,
-        path: urlObj.pathname,
-        protocol: urlObj.protocol
+  const removeParticipationData = (section: keyof ParticipationData, field: string) => {
+    setParticipationData(prev => {
+      const currentSection = prev[section] as Record<string, any> || {}
+      const newSection = { ...currentSection }
+      delete newSection[field]
+      
+      if (Object.keys(newSection).length === 0) {
+        const newData = { ...prev }
+        delete newData[section]
+        return newData
       }
-    } catch {
-      return null
-    }
+      
+      return {
+        ...prev,
+        [section]: newSection
+      }
+    })
+  }
+
+  const resetForm = () => {
+    setOpenForm(null)
+    setError(null)
+    setProofUrl('')
+    setParticipationData({})
+    setActiveTab('transaction')
   }
 
   if (loading) {
@@ -307,9 +512,12 @@ export function QuestOfDay() {
                       <p className="text-sm text-neutral/60 mt-1">{quest.partner_name}</p>
                     </div>
                   </div>
-                  <Badge className="bg-amber/20 text-amber border-amber/30">
-                    +{quest.xp_reward} XP
-                  </Badge>
+                  <div className="flex items-center space-x-2">
+                    <Badge className="bg-amber/20 text-amber border-amber/30">
+                      +{quest.xp_reward} XP
+                    </Badge>
+                    <ShareQuest quest={quest} />
+                  </div>
                 </div>
               </CardHeader>
 
@@ -385,20 +593,37 @@ export function QuestOfDay() {
                         placeholder="https://example.com/proof.png"
                         value={proofUrl}
                         onChange={e => setProofUrl(e.target.value)}
-                        className="bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20"
+                        className={`bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20 ${
+                          proofUrl && !isValidUrl(proofUrl) ? 'border-red/50' : ''
+                        }`}
                       />
-                      {proofUrl && getUrlPreview(proofUrl) && (
-                        <div className="flex items-center space-x-2 text-xs text-neutral/60 bg-background/30 rounded p-2">
-                          <ExternalLink className="w-3 h-3" />
-                          <span>{getUrlPreview(proofUrl)?.domain}</span>
-                          <span className="text-neutral/40">•</span>
-                          <span>{getUrlPreview(proofUrl)?.path}</span>
+                      {proofUrl && (
+                        <div className="flex items-center space-x-2 text-xs">
+                          {isValidUrl(proofUrl) ? (
+                            <>
+                              <CheckCircle className="w-3 h-3 text-green/70" />
+                              <span className="text-green/70">Valid URL</span>
+                              {getUrlPreview(proofUrl) && (
+                                <>
+                                  <span className="text-neutral/40">•</span>
+                                  <span className="text-neutral/60">{getUrlPreview(proofUrl)?.domain}</span>
+                                  <span className="text-neutral/40">•</span>
+                                  <span className="text-neutral/60">{getUrlPreview(proofUrl)?.path}</span>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3 h-3 text-red/70" />
+                              <span className="text-red/70">Invalid URL format</span>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
 
-                    {/* Additional Data Input */}
-                    <div className="space-y-2">
+                    {/* Additional Data Tabs */}
+                    <div className="space-y-3">
                       <label className="text-sm font-medium text-neutral flex items-center gap-2">
                         Additional Data (Optional)
                         <TooltipProvider>
@@ -407,37 +632,168 @@ export function QuestOfDay() {
                               <Info className="w-4 h-4 text-neutral/50" />
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p className="text-sm">Add extra context in JSON format (e.g., transaction details, metadata)</p>
+                              <p className="text-sm">Add structured data to provide more context for your submission</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       </label>
-                      <Textarea
-                        placeholder='{"transaction_hash": "0x...", "block_number": 12345, "notes": "Additional context"}'
-                        value={proofData}
-                        onChange={e => setProofData(e.target.value)}
-                        rows={4}
-                        className="bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20 font-mono text-xs"
-                      />
-                      {proofData && (
-                        <div className="text-xs text-neutral/60">
-                          {(() => {
-                            try {
-                              JSON.parse(proofData)
-                              return <span className="text-green/70">✓ Valid JSON</span>
-                            } catch {
-                              return <span className="text-red/70">✗ Invalid JSON</span>
-                            }
-                          })()}
-                        </div>
-                      )}
+                      
+                      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <TabsList className="grid w-full grid-cols-4 bg-background/30">
+                          <TabsTrigger value="transaction" className="text-xs">Transaction</TabsTrigger>
+                          <TabsTrigger value="social" className="text-xs">Social</TabsTrigger>
+                          <TabsTrigger value="wallet" className="text-xs">Wallet</TabsTrigger>
+                          <TabsTrigger value="context" className="text-xs">Context</TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="transaction" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs text-neutral/70">Transaction Hash</label>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeParticipationData('transaction_details', 'hash')}
+                                className="h-4 w-4 p-0 text-neutral/50 hover:text-red/70"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <Input
+                              placeholder="0x..."
+                              value={participationData.transaction_details?.hash || ''}
+                              onChange={e => updateParticipationData('transaction_details', 'hash', e.target.value)}
+                              className="bg-background/30 border-white/10 text-xs"
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <label className="text-xs text-neutral/70">Block Number</label>
+                              <Input
+                                placeholder="12345"
+                                value={participationData.transaction_details?.block_number || ''}
+                                onChange={e => updateParticipationData('transaction_details', 'block_number', e.target.value)}
+                                className="bg-background/30 border-white/10 text-xs"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs text-neutral/70">Gas Used</label>
+                              <Input
+                                placeholder="21000"
+                                value={participationData.transaction_details?.gas_used || ''}
+                                onChange={e => updateParticipationData('transaction_details', 'gas_used', e.target.value)}
+                                className="bg-background/30 border-white/10 text-xs"
+                              />
+                            </div>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="social" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs text-neutral/70">Platform</label>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeParticipationData('social_media', 'platform')}
+                                className="h-4 w-4 p-0 text-neutral/50 hover:text-red/70"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <Input
+                              placeholder="Twitter, Discord, etc."
+                              value={participationData.social_media?.platform || ''}
+                              onChange={e => updateParticipationData('social_media', 'platform', e.target.value)}
+                              className="bg-background/30 border-white/10 text-xs"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-xs text-neutral/70">Post URL</label>
+                            <Input
+                              placeholder="https://twitter.com/user/status/..."
+                              value={participationData.social_media?.post_url || ''}
+                              onChange={e => updateParticipationData('social_media', 'post_url', e.target.value)}
+                              className="bg-background/30 border-white/10 text-xs"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-xs text-neutral/70">Username</label>
+                            <Input
+                              placeholder="@username"
+                              value={participationData.social_media?.username || ''}
+                              onChange={e => updateParticipationData('social_media', 'username', e.target.value)}
+                              className="bg-background/30 border-white/10 text-xs"
+                            />
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="wallet" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs text-neutral/70">Wallet Address</label>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeParticipationData('wallet_info', 'address')}
+                                className="h-4 w-4 p-0 text-neutral/50 hover:text-red/70"
+                              >
+                                <Minus className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <Input
+                              placeholder="0x..."
+                              value={participationData.wallet_info?.address || ''}
+                              onChange={e => updateParticipationData('wallet_info', 'address', e.target.value)}
+                              className="bg-background/30 border-white/10 text-xs"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-xs text-neutral/70">Balance</label>
+                            <Input
+                              placeholder="1.5 ALPH"
+                              value={participationData.wallet_info?.balance || ''}
+                              onChange={e => updateParticipationData('wallet_info', 'balance', e.target.value)}
+                              className="bg-background/30 border-white/10 text-xs"
+                            />
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="context" className="space-y-3 mt-3">
+                          <div className="space-y-2">
+                            <label className="text-xs text-neutral/70">Description</label>
+                            <Textarea
+                              placeholder="Additional context about your participation..."
+                              value={participationData.additional_context?.description || ''}
+                              onChange={e => updateParticipationData('additional_context', 'description', e.target.value)}
+                              rows={3}
+                              className="bg-background/30 border-white/10 text-xs"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-xs text-neutral/70">Notes</label>
+                            <Textarea
+                              placeholder="Any additional notes or observations..."
+                              value={participationData.additional_context?.notes || ''}
+                              onChange={e => updateParticipationData('additional_context', 'notes', e.target.value)}
+                              rows={2}
+                              className="bg-background/30 border-white/10 text-xs"
+                            />
+                          </div>
+                        </TabsContent>
+                      </Tabs>
                     </div>
 
                     {/* Action Buttons */}
                     <div className="flex space-x-2 pt-2">
                       <Button
                         onClick={() => handleSubmit(quest.id)}
-                        disabled={submitting || !proofUrl.trim()}
+                        disabled={submitting || !proofUrl.trim() || !isValidUrl(proofUrl.trim())}
                         className="flex-1 bg-amber hover:bg-amber/80 text-charcoal"
                       >
                         {submitting ? (
@@ -454,12 +810,7 @@ export function QuestOfDay() {
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => {
-                          setOpenForm(null)
-                          setError(null)
-                          setProofUrl('')
-                          setProofData('')
-                        }}
+                        onClick={resetForm}
                         className="border-white/20 hover:bg-white/10"
                       >
                         Cancel

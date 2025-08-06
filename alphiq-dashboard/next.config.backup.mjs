@@ -62,12 +62,11 @@ const nextConfig = {
     generateEtags: false,
   }),
   // Experimental features for better performance
-  // Note: optimizeCss requires the 'critters' package to be installed
-  // If you encounter build issues, you can disable optimizeCss by setting it to false
+  // Backup configuration with optimizeCss disabled
   experimental: {
-    optimizeCss: true, // Requires 'critters' package - installed via yarn add critters
+    optimizeCss: false, // Disabled to avoid critters dependency issues
     optimizePackageImports: ['@alephium/web3-react', 'lucide-react'],
   },
 }
 
-export default nextConfig
+export default nextConfig 

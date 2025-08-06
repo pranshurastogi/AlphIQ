@@ -57,11 +57,11 @@ export async function computeAndStoreScore(address: string): Promise<{ score: nu
       balScore = Math.round(balance / 20)
     } else if (balance > 200 && balance <= 1000) {
       balScore = Math.round(balance / 10)
-    } else if (balance > 1000 && balance <= 5000) {
+    } else if (balance > 1000 && balance <= 8000) {
       const div15 = Math.round(balance / 15)
       const firstTwo = parseInt(Math.floor(balance).toString().slice(0, 2), 10) || 0
       balScore = div15 + txNumber * firstTwo
-    } else if (balance > 5000 && balance <= 10000) {
+    } else if (balance > 8000 && balance <= 10000) {
       balScore = 500 + txNumber
     } else if (balance > 10000) {
       balScore = txNumber < 10 ? -100 : 700 + txNumber
