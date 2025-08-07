@@ -317,7 +317,7 @@ export function QuestOfDay() {
         xp_reward: q.xp_reward,
         start_at: q.start_at,
         end_at: q.end_at,
-        partner_name: q.admin_user_profiles?.[0]?.partner_name || 'Unknown',
+        partner_name: q.admin_user_profiles?.partner_name || 'Unknown',
       })))
 
       // 2) load user submissions
