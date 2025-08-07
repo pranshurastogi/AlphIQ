@@ -36,9 +36,9 @@ export function useTokenDistribution() {
 
     const toAlph = (atto: bigint) => Number(atto) / 1e18
 
-    // take top 7
+    // take top 50
     holders = (holdersRaw as any[])
-      .slice(0, 7)
+      .slice(0, 50)
       .map((h) => {
         const atto = BigInt(h.balance)
         const alph = toAlph(atto)
