@@ -108,10 +108,8 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
         </div>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+      <div
+        className="animate-in fade-in slide-in-from-bottom-4 duration-500"
       >
         <Card className="bg-card/70 border-white/10 backdrop-blur-sm shadow-lg">
           <CardHeader className="space-y-4">
@@ -285,7 +283,7 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
             )}
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
 
       {/* Submission Modal */}
       {showSubmission && (

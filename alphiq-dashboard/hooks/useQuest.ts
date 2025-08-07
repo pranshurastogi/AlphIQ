@@ -90,8 +90,8 @@ export function useQuest(questId?: number) {
           start_at: questData.start_at,
           end_at: questData.end_at,
           is_active: questData.is_active,
-          partner_name: questData.admin_user_profiles?.partner_name || 'Unknown',
-          category_name: questData.admin_quest_categories?.name || null,
+          partner_name: questData.admin_user_profiles?.[0]?.partner_name || 'Unknown',
+          category_name: questData.admin_quest_categories?.[0]?.name || null,
         }
 
         setQuest(formattedQuest)
@@ -241,8 +241,8 @@ export function useQuests() {
           start_at: q.start_at,
           end_at: q.end_at,
           is_active: q.is_active,
-          partner_name: q.admin_user_profiles?.partner_name || 'Unknown',
-          category_name: q.admin_quest_categories?.name || null,
+          partner_name: q.admin_user_profiles?.[0]?.partner_name || 'Unknown',
+          category_name: q.admin_quest_categories?.[0]?.name || null,
         }))
 
         setQuests(formattedQuests)

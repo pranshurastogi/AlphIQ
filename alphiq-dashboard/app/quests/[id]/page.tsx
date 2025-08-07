@@ -3,7 +3,7 @@
 import React from 'react'
 import { useParams } from 'next/navigation'
 import QuestDetail from '@/components/QuestDetail'
-import { ErrorPage } from '@/components/ErrorPage'
+import ErrorPage from '@/components/ErrorPage'
 
 export default function QuestDetailPage() {
   const params = useParams()
