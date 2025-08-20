@@ -167,7 +167,7 @@ export default function TopBar() {
         </button>
 
         {/* Wallet connect */}
-        <div className="bg-amber hover:bg-amber/90 text-charcoal font-medium flex items-center px-4 py-2 rounded">
+        <div className="glass-effect hover:glass-hover text-neutral font-medium flex items-center px-4 py-2 rounded-lg border border-white/20 transition-all duration-300">
           <AlephiumConnectButton />
         </div>
       </div>

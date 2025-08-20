@@ -17,12 +17,19 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Flame, Calendar, Users, ArrowRight,
+  Rocket, Calendar, Users, ArrowRight,
   CheckCircle2, Clock, XCircle, Loader2,
   Trophy, Zap, Target, Star, Activity, Wallet, Layers, Award, Code,
   ExternalLink, Info, AlertCircle, CheckCircle, Eye, EyeOff, Plus, Minus,
-  Share2, Twitter, Copy, Check
+  Share2, Twitter, Copy, Check, SlidersHorizontal, Search
 } from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface Quest {
   id: number
@@ -30,6 +37,7 @@ interface Quest {
   description: string
   xp_reward: number
   partner_name: string
+  category_name?: string | null
   start_at: string
   end_at?: string | null
 }
@@ -81,7 +89,7 @@ function getQuestIcon(title: string) {
   if (t.includes('score') || t.includes('leaderboard')) return <Trophy className="w-5 h-5 text-amber" />
   if (t.includes('speed') || t.includes('fast')) return <Zap className="w-5 h-5 text-amber" />
   if (t.includes('star')) return <Star className="w-5 h-5 text-amber" />
-  return <Flame className="w-5 h-5 text-amber" />
+  return <Rocket className="w-5 h-5 text-amber" />
 }
 
 // Status badge component
@@ -193,8 +201,26 @@ function ShareQuest({ quest }: { quest: Quest }) {
     setShowShareOptions(false)
   }
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (!target.closest('.share-dropdown-container')) {
+        setShowShareOptions(false)
+      }
+    }
+
+    if (showShareOptions) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showShareOptions])
+
   return (
-    <div className="relative">
+    <div className="relative share-dropdown-container">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -202,9 +228,16 @@ function ShareQuest({ quest }: { quest: Quest }) {
               variant="ghost"
               size="sm"
               onClick={() => setShowShareOptions(!showShareOptions)}
-              className="h-8 w-8 p-0 hover:bg-amber/10"
+              aria-label="Share quest"
+              className={`h-9 w-9 p-0 rounded-lg transition-all duration-200 group ${
+                showShareOptions 
+                  ? 'bg-amber/20 text-amber shadow-lg' 
+                  : 'hover:bg-amber/10 text-neutral/60 hover:text-amber'
+              }`}
             >
-              <Share2 className="w-4 h-4 text-neutral/60 hover:text-amber" />
+              <Share2 className={`w-4 h-4 transition-all duration-200 ${
+                showShareOptions ? 'rotate-12 scale-110' : 'group-hover:rotate-6'
+              }`} />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -214,15 +247,18 @@ function ShareQuest({ quest }: { quest: Quest }) {
       </TooltipProvider>
 
       {showShareOptions && (
-        <div className="absolute top-full right-0 mt-2 bg-card/95 border border-white/20 rounded-lg shadow-lg backdrop-blur-sm z-10 min-w-[200px]">
+        <div className="absolute bottom-full right-0 mb-2 bg-card/95 border border-white/20 rounded-lg shadow-xl backdrop-blur-sm z-50 min-w-[220px] transform transition-all duration-200 animate-in slide-in-from-bottom-2 fade-in-0">
           <div className="p-3 space-y-2">
-            <div className="text-xs font-medium text-neutral/80 mb-2">Share Quest</div>
+            <div className="text-xs font-medium text-neutral/80 mb-2 flex items-center gap-2">
+              <Share2 className="w-3 h-3" />
+              Share Quest
+            </div>
             
             <Button
               variant="ghost"
               size="sm"
               onClick={() => shareToSocial('twitter')}
-              className="w-full justify-start text-xs hover:bg-blue/10"
+              className="w-full justify-start text-xs hover:bg-blue/10 hover:text-blue/80 transition-colors"
             >
               <Twitter className="w-4 h-4 mr-2 text-blue/70" />
               Share on X (Twitter)
@@ -232,7 +268,7 @@ function ShareQuest({ quest }: { quest: Quest }) {
               variant="ghost"
               size="sm"
               onClick={() => shareToSocial('telegram')}
-              className="w-full justify-start text-xs hover:bg-blue/10"
+              className="w-full justify-start text-xs hover:bg-blue/10 hover:text-blue/80 transition-colors"
             >
               <ExternalLink className="w-4 h-4 mr-2 text-blue/70" />
               Share on Telegram
@@ -242,7 +278,7 @@ function ShareQuest({ quest }: { quest: Quest }) {
               variant="ghost"
               size="sm"
               onClick={() => shareToSocial('discord')}
-              className="w-full justify-start text-xs hover:bg-purple/10"
+              className="w-full justify-start text-xs hover:bg-purple/10 hover:text-purple/80 transition-colors"
             >
               <ExternalLink className="w-4 h-4 mr-2 text-purple/70" />
               Copy for Discord
@@ -254,7 +290,7 @@ function ShareQuest({ quest }: { quest: Quest }) {
               variant="ghost"
               size="sm"
               onClick={copyToClipboard}
-              className="w-full justify-start text-xs hover:bg-green/10"
+              className="w-full justify-start text-xs hover:bg-green/10 hover:text-green/80 transition-colors"
             >
               {copied ? (
                 <>
@@ -290,6 +326,13 @@ export function QuestOfDay() {
   const [showPreview, setShowPreview] = useState(false)
   const [activeTab, setActiveTab] = useState('transaction')
 
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedPartner, setSelectedPartner] = useState<string>('all')
+  const [selectedStatus, setSelectedStatus] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<string>('start_newest')
+
   useEffect(() => {
     async function init() {
       setLoading(true)
@@ -300,7 +343,8 @@ export function QuestOfDay() {
         .from('admin_quests')
         .select(`
           id, title, description, xp_reward, start_at, end_at,
-          admin_user_profiles(partner_name)
+          admin_user_profiles(partner_name),
+          admin_quest_categories(name)
         `)
         .eq('is_active', true)
         .order('start_at', { ascending: true })
@@ -310,14 +354,15 @@ export function QuestOfDay() {
         setLoading(false)
         return
       }
-      setQuests(qData!.map(q => ({
+      setQuests(qData!.map((q: any) => ({
         id: q.id,
         title: q.title,
         description: q.description,
         xp_reward: q.xp_reward,
         start_at: q.start_at,
         end_at: q.end_at,
-        partner_name: q.admin_user_profiles?.partner_name || 'Unknown',
+        partner_name: q.admin_user_profiles?.partner_name || q.admin_user_profiles?.[0]?.partner_name || 'Unknown',
+        category_name: q.admin_quest_categories?.name || q.admin_quest_categories?.[0]?.name || null,
       })))
 
       // 2) load user submissions
@@ -451,7 +496,7 @@ export function QuestOfDay() {
       <Card className="bg-card/20 border-white/10 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-neutral/80 flex items-center gap-2">
-            <Flame className="w-5 h-5" />
+            <Rocket className="w-5 h-5" />
             No Live Challenges
           </CardTitle>
         </CardHeader>
@@ -468,7 +513,7 @@ export function QuestOfDay() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-amber/10 rounded-lg">
-            <Flame className="w-6 h-6 text-amber" />
+            <Rocket className="w-6 h-6 text-amber" />
           </div>
           <div>
             <h2 className="text-2xl font-semibold text-neutral">Live Challenges</h2>
@@ -483,9 +528,114 @@ export function QuestOfDay() {
         </Link>
       </div>
 
+      {/* Filters - Hero Movie Theme */}
+      <div className="bg-gradient-to-r from-card/30 via-card/20 to-card/30 border border-white/10 rounded-xl p-4 backdrop-blur-sm">
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="flex items-center gap-2 text-neutral/70 text-sm">
+            <SlidersHorizontal className="w-4 h-4" />
+            <span className="font-medium">Filter Challenges</span>
+          </div>
+          
+          {/* Search Bar - Hero Style */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-neutral/50 absolute left-4 top-1/2 -translate-y-1/2" />
+            <Input
+              placeholder="Search for quests..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20 h-12 text-base"
+            />
+          </div>
+          
+          {/* Filter Controls */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="bg-background/50 border-white/20">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent className="bg-card/95 border-white/10">
+                <SelectItem value="all">All Categories</SelectItem>
+                {Array.from(new Set(quests.map(q => q.category_name).filter(Boolean))).map((name) => (
+                  <SelectItem key={name as string} value={name as string}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedPartner} onValueChange={setSelectedPartner}>
+              <SelectTrigger className="bg-background/50 border-white/20">
+                <SelectValue placeholder="Partner" />
+              </SelectTrigger>
+              <SelectContent className="bg-card/95 border-white/10">
+                <SelectItem value="all">All Partners</SelectItem>
+                {Array.from(new Set(quests.map(q => q.partner_name))).map((name) => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="bg-background/50 border-white/20">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-card/95 border-white/10">
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="not_submitted">Not Submitted</SelectItem>
+                <SelectItem value="submitted">Submitted</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="bg-background/50 border-white/20">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent className="bg-card/95 border-white/10">
+                <SelectItem value="start_newest">Newest</SelectItem>
+                <SelectItem value="start_oldest">Oldest</SelectItem>
+                <SelectItem value="xp_high">XP: High → Low</SelectItem>
+                <SelectItem value="xp_low">XP: Low → High</SelectItem>
+                <SelectItem value="ending_soon">Ending Soon</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
       {/* Quest Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {quests.map(quest => {
+        {quests
+          .filter(q => {
+            const matchText = (q.title + ' ' + q.description).toLowerCase().includes(searchQuery.toLowerCase())
+            const matchCategory = selectedCategory === 'all' || q.category_name === selectedCategory
+            const matchPartner = selectedPartner === 'all' || q.partner_name === selectedPartner
+            const submission = subs[q.id]
+            const matchStatus = (() => {
+              if (selectedStatus === 'all') return true
+              if (selectedStatus === 'not_submitted') return !submission
+              if (selectedStatus === 'submitted') return !!submission
+              if (selectedStatus === 'approved') return submission?.status === 'approved'
+              if (selectedStatus === 'pending') return submission?.status === 'pending'
+              if (selectedStatus === 'rejected') return submission?.status === 'rejected'
+              return true
+            })()
+            return matchText && matchCategory && matchPartner && matchStatus
+          })
+          .sort((a, b) => {
+            if (sortBy === 'xp_high') return b.xp_reward - a.xp_reward
+            if (sortBy === 'xp_low') return a.xp_reward - b.xp_reward
+            if (sortBy === 'ending_soon') {
+              const aTime = a.end_at ? new Date(a.end_at).getTime() : Number.POSITIVE_INFINITY
+              const bTime = b.end_at ? new Date(b.end_at).getTime() : Number.POSITIVE_INFINITY
+              return aTime - bTime
+            }
+            if (sortBy === 'start_oldest') return new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
+            // default newest
+            return new Date(b.start_at).getTime() - new Date(a.start_at).getTime()
+          })
+          .map(quest => {
           const sub = subs[quest.id]
           const start = new Date(quest.start_at).toLocaleDateString(undefined, {
             month: 'short', day: 'numeric', year: 'numeric'
@@ -502,28 +652,32 @@ export function QuestOfDay() {
               className="bg-card/20 border-white/10 backdrop-blur-sm hover:bg-card/30 transition-all duration-200 group"
             >
               <CardHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-amber/10 rounded-lg group-hover:bg-amber/20 transition-colors">
-                      {getQuestIcon(quest.title)}
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg text-neutral">{quest.title}</CardTitle>
-                      <p className="text-sm text-neutral/60 mt-1">{quest.partner_name}</p>
-                    </div>
+                {/* Icon and Title */}
+                <div className="flex items-start space-x-3 mb-3">
+                  <div className="p-2 bg-amber/10 rounded-lg group-hover:bg-amber/20 transition-colors">
+                    {getQuestIcon(quest.title)}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge className="bg-amber/20 text-amber border-amber/30">
-                      +{quest.xp_reward} XP
-                    </Badge>
-                    <ShareQuest quest={quest} />
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg text-neutral leading-tight">{quest.title}</CardTitle>
+                    <p className="text-sm text-neutral/60 mt-1">{quest.partner_name}</p>
                   </div>
+                </div>
+                
+                {/* XP Badge */}
+                <div className="flex items-center justify-between">
+                  <Badge className="bg-orange-500/20 backdrop-blur-sm border border-orange-400/30 text-orange-300 shadow-lg px-3 py-1.5">
+                    <Zap className="w-3 h-3 mr-1" /> +{quest.xp_reward} XP
+                  </Badge>
                 </div>
               </CardHeader>
 
               <CardContent className="space-y-4">
-                {/* Description */}
-                <p className="text-sm text-neutral/70 leading-relaxed">{quest.description}</p>
+                {/* Description - Formatted */}
+                <div className="prose prose-sm prose-neutral max-w-none">
+                  <p className="text-sm text-neutral/70 leading-relaxed whitespace-pre-wrap">
+                    {quest.description}
+                  </p>
+                </div>
 
                 {/* Meta Info */}
                 <div className="flex items-center justify-between text-xs text-neutral/50">
@@ -538,6 +692,15 @@ export function QuestOfDay() {
                 </div>
 
                 <Separator className="bg-white/10" />
+
+                {/* Share Button - Better positioned */}
+                <div className="flex justify-between items-center pt-2">
+                  <div className="text-xs text-neutral/50 flex items-center gap-1">
+                    <Share2 className="w-3 h-3" />
+                    Share with community
+                  </div>
+                  <ShareQuest quest={quest} />
+                </div>
 
                 {/* Submission Status or Form */}
                 {sub ? (

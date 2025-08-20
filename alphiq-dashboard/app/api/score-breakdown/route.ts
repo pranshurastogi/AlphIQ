@@ -78,11 +78,12 @@ export async function GET(request: NextRequest) {
     // 4) combine & clamp
     const raw = balScore + ageScore
     const totalScore = Math.min(1000, Math.max(0, raw))
-    safeLog('log', `[score-breakdown] ${address} → raw=${raw}, totalScore=${totalScore}`)
+    
+    safeLog('log', `[score-breakdown] ${address} → raw=${raw}, totalScore=${totalScore}, ageScore=${ageScore}`)
 
     return NextResponse.json({
       balanceScore: balScore,
-      ageScore: ageScore,
+      ageScore: ageScore, // Return actual calculated age score
       totalScore: totalScore,
       balance: balance,
       txNumber: txNumber,
