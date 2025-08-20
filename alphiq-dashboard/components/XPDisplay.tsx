@@ -126,12 +126,12 @@ export function XPDisplay({ address }: XPDisplayProps) {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-6 relative z-10">
+      <CardContent className="space-y-6 relative z-10 min-h-[280px]">
         {/* Main XP Display */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center space-x-2">
             <Zap className="w-8 h-8 text-amber" />
-            <span className="text-4xl font-bold text-amber">
+            <span className="text-4xl md:text-5xl font-bold text-amber tabular-nums">
               {displayXP.toLocaleString()}
             </span>
             <Star className="w-6 h-6 text-mint" />
@@ -152,7 +152,7 @@ export function XPDisplay({ address }: XPDisplayProps) {
           <div className="relative">
             <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
               <div
-                className="h-3 bg-gradient-to-r from-mint via-amber to-lavender rounded-full transition-all duration-1000 relative"
+                className="h-3 bg-gradient-to-r from-amber via-mint to-lavender rounded-full transition-all duration-1000 relative"
                 style={{ width: `${progressToNext}%` }}
               >
                 {/* Animated shine effect */}

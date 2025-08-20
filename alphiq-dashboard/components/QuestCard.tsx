@@ -55,16 +55,18 @@ export default function QuestCard({ quest, submission }: QuestCardProps) {
               📂 {quest.category_name}
             </p>
           </div>
-          <Badge className="bg-amber text-charcoal px-3">
-            💎 {quest.xp_reward}
+          <Badge className="bg-orange-500/20 backdrop-blur-sm border border-orange-400/30 text-orange-300 shadow-lg px-3 py-1.5">
+            💎 +{quest.xp_reward} XP
           </Badge>
         </CardHeader>
 
         {/* Body */}
         <CardContent className="flex-1 space-y-4">
-          <p className="text-sm text-neutral/70 line-clamp-3">
-            {quest.description}
-          </p>
+          <div className="prose prose-sm prose-neutral max-w-none">
+            <p className="text-sm text-neutral/70 line-clamp-3 whitespace-pre-wrap">
+              {quest.description}
+            </p>
+          </div>
 
           <div className="flex flex-wrap items-center text-xs text-neutral/50 gap-3">
             <span className="flex items-center space-x-1">

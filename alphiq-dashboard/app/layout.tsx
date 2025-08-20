@@ -9,11 +9,21 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 export const metadata = {
   title: 'AlphIQ Dashboard',
   description: 'DeFi Intelligence & Onchain Scores for Alephium',
+  icons: {
+    icon: '/images/alphiq.png',
+    shortcut: '/images/alphiq.png',
+    apple: '/images/alphiq.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/images/alphiq.png" />
+        <link rel="shortcut icon" href="/images/alphiq.png" />
+        <link rel="apple-touch-icon" href="/images/alphiq.png" />
+      </head>
       <body className="bg-charcoal text-neutral">
         {/* Wallet context for all pages */}
         <AlephiumWalletProvider 
