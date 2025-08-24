@@ -13,9 +13,9 @@ import {
   X,
   User,
 } from 'lucide-react'
-import { AlephiumConnectButton, useWallet } from '@alephium/web3-react'
+import { useWallet } from '@alephium/web3-react'
 import { supabase } from '@/lib/supabaseClient'
-import { ANSDisplay } from '@/components/ANSDisplay'
+import { WalletConnectWithANS } from '@/components/WalletConnectWithANS'
 
 // Helper function to check if we're in development
 const isDevelopment = () => process.env.NODE_ENV === 'development'
@@ -170,33 +170,17 @@ export default function TopBar() {
           {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
 
-        {/* Wallet connect with ANS support */}
-        <div className="flex items-center space-x-3">
-          {/* ANS Profile Display */}
-          {address && (
-            <div className="hidden sm:block glass-effect px-3 py-2 rounded-lg border border-white/20">
-              <ANSDisplay address={address} size="sm" />
-            </div>
-          )}
-          
-
-          
-          {/* Wallet Connect Button */}
-          <div className="glass-effect hover:glass-hover text-neutral font-medium flex items-center px-4 py-2 rounded-lg border border-white/20 transition-all duration-300">
-            <AlephiumConnectButton />
-          </div>
-        </div>
+        {/* Integrated Wallet Connect with ANS */}
+        <WalletConnectWithANS />
       </div>
 
       {/* Mobile nav panel */}
       {menuOpen && (
         <div className="md:hidden bg-charcoal/95 backdrop-blur-sm absolute inset-x-0 top-full z-40">
           {/* Mobile ANS Profile */}
-          {address && (
-            <div className="px-6 py-4 border-b border-white/10">
-              <ANSDisplay address={address} size="md" />
-            </div>
-          )}
+          <div className="px-6 py-4 border-b border-white/10">
+            <WalletConnectWithANS variant="mobile" />
+          </div>
           
           <nav className="flex flex-col px-6 py-4 space-y-2">
             <Link
