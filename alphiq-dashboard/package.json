@@ -17,6 +17,7 @@
   "dependencies": {
     "@alephium/get-extension-wallet": "^1.11.7",
     "@alephium/web3-react": "^1.11.7",
+    "@alph-name-service/ans-sdk": "^0.1.0",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
