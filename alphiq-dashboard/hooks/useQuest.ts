@@ -98,22 +98,27 @@ export function useQuest(questId?: number) {
 
         // Fetch user's submission if wallet is connected
         if (userAddress) {
-          const { data: submissionData } = await supabase
-            .from('admin_quest_submissions')
-            .select('quest_id, status, proof_url, proof_data, review_notes, submitted_at')
-            .eq('quest_id', questId)
-            .eq('user_address', userAddress)
-            .single()
+          try {
+            const { data: submissionData, error: submissionError } = await supabase
+              .from('admin_quest_submissions')
+              .select('quest_id, status, proof_url, proof_data, review_notes, submitted_at')
+              .eq('quest_id', questId)
+              .eq('user_address', userAddress)
+              .maybeSingle()
 
-          if (submissionData) {
-            setSubmission({
-              quest_id: submissionData.quest_id,
-              status: submissionData.status,
-              proof_url: submissionData.proof_url,
-              proof_data: submissionData.proof_data,
-              review_notes: submissionData.review_notes,
-              submitted_at: submissionData.submitted_at,
-            })
+            if (submissionData && !submissionError) {
+              setSubmission({
+                quest_id: submissionData.quest_id,
+                status: submissionData.status,
+                proof_url: submissionData.proof_url,
+                proof_data: submissionData.proof_data,
+                review_notes: submissionData.review_notes,
+                submitted_at: submissionData.submitted_at,
+              })
+            }
+          } catch (submissionErr) {
+            console.warn('Failed to fetch submission:', submissionErr)
+            // Don't set error for submission fetch failure, just continue
           }
         }
 
