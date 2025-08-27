@@ -21,7 +21,7 @@ import {
   CheckCircle2, Clock, XCircle, Loader2,
   Trophy, Zap, Target, Star, Activity, Wallet, Layers, Award, Code,
   ExternalLink, Info, AlertCircle, CheckCircle, Eye, EyeOff, Plus, Minus,
-  Share2, Twitter, Copy, Check, SlidersHorizontal, Search
+  Share2, Twitter, Copy, Check, SlidersHorizontal, Search, ChevronDown
 } from 'lucide-react'
 import {
   Select,
@@ -333,6 +333,12 @@ export function QuestOfDay() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('start_newest')
 
+  // Pagination state
+  const [displayedQuests, setDisplayedQuests] = useState<Quest[]>([])
+  const [questsPerPage] = useState(6)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMoreQuests, setHasMoreQuests] = useState(true)
+
   useEffect(() => {
     async function init() {
       setLoading(true)
@@ -466,6 +472,66 @@ export function QuestOfDay() {
     setProofUrl('')
     setParticipationData({})
     setActiveTab('transaction')
+  }
+
+  // Filter and sort quests
+  const getFilteredAndSortedQuests = () => {
+    return quests
+      .filter(q => {
+        const matchText = (q.title + ' ' + q.description).toLowerCase().includes(searchQuery.toLowerCase())
+        const matchCategory = selectedCategory === 'all' || q.category_name === selectedCategory
+        const matchPartner = selectedPartner === 'all' || q.partner_name === selectedPartner
+        const submission = subs[q.id]
+        const matchStatus = (() => {
+          if (selectedStatus === 'all') return true
+          if (selectedStatus === 'not_submitted') return !submission
+          if (selectedStatus === 'submitted') return !!submission
+          if (selectedStatus === 'approved') return submission?.status === 'approved'
+          if (selectedStatus === 'pending') return submission?.status === 'pending'
+          if (selectedStatus === 'rejected') return submission?.status === 'rejected'
+          return true
+        })()
+        return matchText && matchCategory && matchPartner && matchStatus
+      })
+      .sort((a, b) => {
+        if (sortBy === 'xp_high') return b.xp_reward - a.xp_reward
+        if (sortBy === 'xp_low') return a.xp_reward - b.xp_reward
+        if (sortBy === 'ending_soon') {
+          const aTime = a.end_at ? new Date(a.end_at).getTime() : Number.POSITIVE_INFINITY
+          const bTime = b.end_at ? new Date(b.end_at).getTime() : Number.POSITIVE_INFINITY
+          return aTime - bTime
+        }
+        if (sortBy === 'start_oldest') return new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
+        // default newest
+        return new Date(b.start_at).getTime() - new Date(a.start_at).getTime()
+      })
+  }
+
+  // Update displayed quests when filters change or quests are loaded
+  useEffect(() => {
+    const filteredQuests = getFilteredAndSortedQuests()
+    const totalPages = Math.ceil(filteredQuests.length / questsPerPage)
+    
+    // Reset to first page when filters change
+    setCurrentPage(1)
+    
+    // Update displayed quests
+    const endIndex = questsPerPage
+    setDisplayedQuests(filteredQuests.slice(0, endIndex))
+    
+    // Check if there are more quests to load
+    setHasMoreQuests(filteredQuests.length > questsPerPage)
+  }, [quests, subs, searchQuery, selectedCategory, selectedPartner, selectedStatus, sortBy])
+
+  // Load more quests
+  const loadMoreQuests = () => {
+    const filteredQuests = getFilteredAndSortedQuests()
+    const nextPage = currentPage + 1
+    const endIndex = nextPage * questsPerPage
+    
+    setDisplayedQuests(filteredQuests.slice(0, endIndex))
+    setCurrentPage(nextPage)
+    setHasMoreQuests(filteredQuests.length > endIndex)
   }
 
   if (loading) {
@@ -605,37 +671,9 @@ export function QuestOfDay() {
       </div>
 
       {/* Quest Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {quests
-          .filter(q => {
-            const matchText = (q.title + ' ' + q.description).toLowerCase().includes(searchQuery.toLowerCase())
-            const matchCategory = selectedCategory === 'all' || q.category_name === selectedCategory
-            const matchPartner = selectedPartner === 'all' || q.partner_name === selectedPartner
-            const submission = subs[q.id]
-            const matchStatus = (() => {
-              if (selectedStatus === 'all') return true
-              if (selectedStatus === 'not_submitted') return !submission
-              if (selectedStatus === 'submitted') return !!submission
-              if (selectedStatus === 'approved') return submission?.status === 'approved'
-              if (selectedStatus === 'pending') return submission?.status === 'pending'
-              if (selectedStatus === 'rejected') return submission?.status === 'rejected'
-              return true
-            })()
-            return matchText && matchCategory && matchPartner && matchStatus
-          })
-          .sort((a, b) => {
-            if (sortBy === 'xp_high') return b.xp_reward - a.xp_reward
-            if (sortBy === 'xp_low') return a.xp_reward - b.xp_reward
-            if (sortBy === 'ending_soon') {
-              const aTime = a.end_at ? new Date(a.end_at).getTime() : Number.POSITIVE_INFINITY
-              const bTime = b.end_at ? new Date(b.end_at).getTime() : Number.POSITIVE_INFINITY
-              return aTime - bTime
-            }
-            if (sortBy === 'start_oldest') return new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
-            // default newest
-            return new Date(b.start_at).getTime() - new Date(a.start_at).getTime()
-          })
-          .map(quest => {
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {displayedQuests.map(quest => {
           const sub = subs[quest.id]
           const start = new Date(quest.start_at).toLocaleDateString(undefined, {
             month: 'short', day: 'numeric', year: 'numeric'
@@ -996,6 +1034,33 @@ export function QuestOfDay() {
             </Card>
           )
         })}
+        </div>
+
+        {/* Load More Button */}
+        {hasMoreQuests && (
+          <div className="flex justify-center pt-4">
+            <Button
+              onClick={loadMoreQuests}
+              variant="outline"
+              className="border-amber/30 text-amber hover:bg-amber/10 hover:border-amber/50 transition-all duration-200 group"
+            >
+              <ChevronDown className="w-4 h-4 mr-2 group-hover:translate-y-0.5 transition-transform" />
+              Load More Quests
+              <span className="ml-2 text-xs text-neutral/60">
+                ({displayedQuests.length} of {getFilteredAndSortedQuests().length})
+              </span>
+            </Button>
+          </div>
+        )}
+
+        {/* No more quests message */}
+        {!hasMoreQuests && displayedQuests.length > 0 && (
+          <div className="text-center py-4">
+            <p className="text-sm text-neutral/60">
+              You've seen all available quests! 🎉
+            </p>
+          </div>
+        )}
       </div>
     </section>
   )
