@@ -4,6 +4,7 @@
 import { useWallet } from '@alephium/web3-react'
 import useSWR from 'swr'
 import { supabase } from '@/lib/supabaseClient'
+import { useANS } from '@/hooks/useANS'
 import {
   Card,
   CardHeader,
@@ -31,10 +32,44 @@ type User = {
   joined_at: string
 }
 
+// Component to display user name with ANS support
+function UserDisplay({ address, isMe }: { address: string; isMe: boolean }) {
+  const { ansName, hasANS, isLoading } = useANS(address)
+
+  if (isLoading) {
+    return (
+      <div className={`font-medium ${isMe ? 'text-amber' : 'text-neutral'}`}>
+        Loading...
+      </div>
+    )
+  }
+
+  if (hasANS && ansName) {
+    return (
+      <div className={`font-medium ${isMe ? 'text-amber' : 'text-neutral'}`}>
+        {ansName}
+        {isMe && (
+          <span className="text-xs ml-2 text-amber/70">(You)</span>
+        )}
+      </div>
+    )
+  }
+
+  // Fallback to truncated address
+  return (
+    <div className={`font-medium ${isMe ? 'text-amber' : 'text-neutral'}`}>
+      {address.slice(0, 6)}…{address.slice(-6)}
+      {isMe && (
+        <span className="text-xs ml-2 text-amber/70">(You)</span>
+      )}
+    </div>
+  )
+}
+
 const fetchLeaderboard = async (): Promise<User[]> => {
   try {
     const { data, error } = await supabase
-      .from<User>('users')
+      .from('users')
       .select('address,score,title,joined_at')
       .order('score', { ascending: false })
       .order('joined_at', { ascending: true })
@@ -127,9 +162,10 @@ export function Leaderboard() {
         {/* Top 10 */}
         {topUsers.map((user, idx) => {
           const rank = idx + 1
-          const isMe =
+          const isMe = !!(
             currentAddress &&
             user.address.toLowerCase() === currentAddress.toLowerCase()
+          )
 
           return (
             <div
@@ -143,16 +179,7 @@ export function Leaderboard() {
               <div className="flex items-center space-x-3">
                 {getRankIcon(rank)}
                 <div>
-                  <div
-                    className={`font-medium ${
-                      isMe ? 'text-amber' : 'text-neutral'
-                    }`}
-                  >
-                    {user.address.slice(0, 6)}…{user.address.slice(-6)}
-                    {isMe && (
-                      <span className="text-xs ml-2 text-amber/70">(You)</span>
-                    )}
-                  </div>
+                  <UserDisplay address={user.address} isMe={isMe} />
                   <Badge
                     className={`text-xs mt-1 ${
                       isMe
@@ -184,10 +211,7 @@ export function Leaderboard() {
             <div className="flex items-center space-x-3">
               {getRankIcon(myRank)}
               <div>
-                <div className="font-medium text-amber">
-                  {meUser.address.slice(0, 6)}…{meUser.address.slice(-6)}
-                  <span className="text-xs ml-2 text-amber/70">(You)</span>
-                </div>
+                <UserDisplay address={meUser.address} isMe={true} />
                 <Badge className="text-xs mt-1 bg-amber/20 text-amber border-amber/30">
                   {meUser.title}
                 </Badge>
