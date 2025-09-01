@@ -58,12 +58,12 @@ export function XPBreakdown({ address }: XPBreakdownProps) {
   // Handle no wallet connected
   if (!address) {
     return (
-      <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+      <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
         <CardContent className="p-6 text-center">
           <div className="text-neutral/60 mb-4">
             <Wallet className="w-12 h-12 mx-auto mb-3 text-neutral/40" />
             <div className="text-lg font-medium">Connect Your Wallet</div>
-            <div className="text-sm">Connect your wallet to view XP breakdown</div>
+            <div className="text-sm">Connect your wallet to view your XP breakdown</div>
           </div>
         </CardContent>
       </Card>
@@ -73,7 +73,7 @@ export function XPBreakdown({ address }: XPBreakdownProps) {
   // Handle loading state
   if (isLoading) {
     return (
-      <Card className="bg-card/50 border-white/10 backdrop-blur-sm animate-pulse">
+      <Card className="bg-card/50 border-amber/20 backdrop-blur-sm animate-pulse">
         <CardContent className="p-6">
           <div className="space-y-4">
             <div className="h-4 bg-white/10 rounded"></div>
@@ -88,7 +88,7 @@ export function XPBreakdown({ address }: XPBreakdownProps) {
   // Handle empty history
   if (xpHistory.length === 0) {
     return (
-      <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+      <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-lavender flex items-center">
             <TrendingUp className="w-5 h-5 mr-2" />
@@ -103,7 +103,7 @@ export function XPBreakdown({ address }: XPBreakdownProps) {
   }
 
   return (
-    <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+    <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
       <CardHeader className="pb-4">
         <CardTitle className="text-lavender flex items-center justify-between">
           <div className="flex items-center space-x-2">

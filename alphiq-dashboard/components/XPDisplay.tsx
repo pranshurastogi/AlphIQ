@@ -46,19 +46,19 @@ export function XPDisplay({ address }: XPDisplayProps) {
 
   // Fallback level calculation (used when database levels are not available)
   const getLevel = (xp: number) => {
-    if (xp < 100) return { level: 1, name: "Novice", color: "text-blue-400" }
-    if (xp < 500) return { level: 2, name: "Explorer", color: "text-green-400" }
-    if (xp < 1000) return { level: 3, name: "Adventurer", color: "text-yellow-400" }
-    if (xp < 2500) return { level: 4, name: "Veteran", color: "text-orange-400" }
-    if (xp < 5000) return { level: 5, name: "Master", color: "text-red-400" }
-    return { level: 6, name: "Legend", color: "text-purple-400" }
+    if (xp < 100) return { level: 1, name: "Novice", color: "text-mint" }
+    if (xp < 500) return { level: 2, name: "Explorer", color: "text-mint" }
+    if (xp < 1000) return { level: 3, name: "Adventurer", color: "text-amber" }
+    if (xp < 2500) return { level: 4, name: "Veteran", color: "text-amber" }
+    if (xp < 5000) return { level: 5, name: "Master", color: "text-lavender" }
+    return { level: 6, name: "Legend", color: "text-lavender" }
   }
 
   // Use level info from the database if available, otherwise fallback to calculated
   const levelInfo = userXP?.levelName ? {
     level: userXP.level || 1,
     name: userXP.levelName,
-    color: userXP.levelColor || "text-blue-400"
+    color: userXP.levelColor || "text-mint"
   } : getLevel(displayXP)
 
   // Calculate progress to next level (this will need to be updated when we have real level data)
@@ -73,7 +73,7 @@ export function XPDisplay({ address }: XPDisplayProps) {
 
   if (!address) {
     return (
-      <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+      <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
         <CardContent className="p-6 text-center">
           <div className="text-neutral/60 mb-4">
             <Wallet className="w-12 h-12 mx-auto mb-3 text-neutral/40" />
@@ -87,7 +87,7 @@ export function XPDisplay({ address }: XPDisplayProps) {
 
   if (isLoading) {
     return (
-      <Card className="bg-card/50 border-white/10 backdrop-blur-sm animate-pulse">
+      <Card className="bg-card/50 border-amber/20 backdrop-blur-sm animate-pulse">
         <CardContent className="p-6">
           <div className="h-32 bg-white/10 rounded-lg"></div>
         </CardContent>
@@ -96,7 +96,7 @@ export function XPDisplay({ address }: XPDisplayProps) {
   }
 
   return (
-    <Card className="bg-card/50 border-white/10 backdrop-blur-sm relative overflow-hidden">
+    <Card className="bg-card/50 border-amber/20 backdrop-blur-sm relative overflow-hidden">
       {/* Animated background particles */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(6)].map((_, i) => (

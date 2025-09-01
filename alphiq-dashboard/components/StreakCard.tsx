@@ -69,7 +69,7 @@ export function StreakCard() {
   // loading state
   if (loading) {
     return (
-      <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+      <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-amber">
             <Calendar className="w-5 h-5" /><span>Streak</span>

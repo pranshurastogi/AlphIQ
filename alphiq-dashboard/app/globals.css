@@ -4,24 +4,24 @@
 
 @layer base {
   :root {
-    --background: 220 10% 11%;
+    --background: 27 10% 11%;
     --foreground: 0 0% 88%;
-    --card: 220 10% 13%;
+    --card: 27 10% 13%;
     --card-foreground: 0 0% 88%;
-    --popover: 220 10% 13%;
+    --popover: 27 10% 13%;
     --popover-foreground: 0 0% 88%;
     --primary: 14 100% 70%;
-    --primary-foreground: 220 10% 11%;
-    --secondary: 220 10% 16%;
+    --primary-foreground: 27 10% 11%;
+    --secondary: 27 10% 16%;
     --secondary-foreground: 0 0% 88%;
-    --muted: 220 10% 16%;
+    --muted: 27 10% 16%;
     --muted-foreground: 0 0% 65%;
-    --accent: 220 10% 16%;
+    --accent: 27 10% 16%;
     --accent-foreground: 0 0% 88%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 10% 20%;
-    --input: 220 10% 20%;
+    --border: 14 100% 70%;
+    --input: 27 10% 20%;
     --ring: 14 100% 70%;
     --radius: 0.5rem;
   }
@@ -38,11 +38,11 @@
 
 @layer components {
   .glass-effect {
-    @apply bg-white/5 backdrop-blur-xl border-white/20 shadow-2xl;
+    @apply bg-white/5 backdrop-blur-xl border-amber/30 shadow-2xl;
   }
   
   .glass-card {
-    @apply bg-white/5 backdrop-blur-sm border-white/10 shadow-lg;
+    @apply bg-white/5 backdrop-blur-sm border-amber/20 shadow-lg;
   }
   
   .glass-hover {
@@ -50,11 +50,11 @@
   }
   
   .progress-glow {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(255, 138, 101, 0.1);
   }
   
   .text-glow {
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    text-shadow: 0 0 10px rgba(255, 138, 101, 0.3);
   }
 }
 
@@ -79,17 +79,17 @@
 }
 
 .shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 138, 101, 0.1), transparent);
   background-size: 200px 100%;
   animation: shimmer 2s infinite;
 }
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(255, 138, 101, 0.1);
   }
   50% {
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 30px rgba(255, 138, 101, 0.2);
   }
 }
 
