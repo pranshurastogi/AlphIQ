@@ -20,17 +20,17 @@ export function WalletConnectWithANS({ variant = 'desktop' }: WalletConnectWithA
         {address && hasANS ? (
           // Mobile: Show ANS profile with wallet connection below
           <div className="w-full space-y-3">
-            <div className="glass-effect px-4 py-3 rounded-lg border border-white/20">
+            <div className="glass-effect px-4 py-3 rounded-lg border border-amber/30">
               <ANSDisplay address={address} size="md" showAddress={true} />
             </div>
-            <div className="glass-effect px-4 py-2 rounded-lg border border-white/20">
+            <div className="glass-effect px-4 py-2 rounded-lg border border-amber/30">
               <AlephiumConnectButton />
             </div>
           </div>
         ) : (
           // Mobile: Show just wallet connect button when no ANS
           <div className="w-full">
-            <div className="glass-effect px-4 py-2 rounded-lg border border-white/20">
+            <div className="glass-effect px-4 py-2 rounded-lg border border-amber/30">
               <AlephiumConnectButton />
             </div>
           </div>
@@ -43,16 +43,16 @@ export function WalletConnectWithANS({ variant = 'desktop' }: WalletConnectWithA
     <div className="flex items-center">
       {address && hasANS ? (
         // Desktop: Show ANS profile with wallet connection integrated
-        <div className="glass-effect hover:glass-hover text-neutral font-medium flex items-center px-4 py-2 rounded-lg border border-white/20 transition-all duration-300">
+        <div className="glass-effect hover:glass-hover text-neutral font-medium flex items-center px-4 py-2 rounded-lg border border-amber/30 transition-all duration-300">
           <div className="flex items-center space-x-3">
             <ANSDisplay address={address} size="sm" showAddress={false} />
-            <div className="w-px h-6 bg-white/20" />
+            <div className="w-px h-6 bg-amber/30" />
             <AlephiumConnectButton />
           </div>
         </div>
       ) : (
         // Desktop: Show just wallet connect button when no ANS
-        <div className="glass-effect hover:glass-hover text-neutral font-medium flex items-center px-4 py-2 rounded-lg border border-white/20 transition-all duration-300">
+        <div className="glass-effect hover:glass-hover text-neutral font-medium flex items-center px-4 py-2 rounded-lg border border-amber/30 transition-all duration-300">
           <AlephiumConnectButton />
         </div>
       )}

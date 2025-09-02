@@ -11,6 +11,7 @@ import { ScoreHistoryChart } from "@/components/score-history-chart"
 import { AchievementCard } from "@/components/achievement-card"
 import { Leaderboard } from "@/components/leaderboard"
 import { ScoreMultiplier } from "@/components/score-multiplier"
+import { XPLeaderboard } from "@/components/XPLeaderboard"
 import {
   Activity,
   Wallet,
@@ -140,16 +141,11 @@ export default function OnchainScorePage() {
         <div className="grid grid-cols-12 gap-6">
           {/* Left Panel - Score Overview */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
+            {/* Elite Rankings */}
+            <XPLeaderboard />
            
-            {/* Main Score Display */}
-                 {/* Onchain Score */}
-                 <OnchainScoreCard />
-
-
-        
-
             {/* Score History */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+            <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-amber flex items-center">
                   <TrendingUp className="w-5 h-5 mr-2" />
@@ -177,7 +173,7 @@ export default function OnchainScorePage() {
             <XPBreakdown address={address} />
 
             {/* Weekly Quests */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+            <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-amber flex items-center">
                   <Target className="w-5 h-5 mr-2" />
@@ -224,7 +220,7 @@ export default function OnchainScorePage() {
             </Card>
 
             {/* Achievements Grid */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+            <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-mint flex items-center">
                   <Award className="w-5 h-5 mr-2" />
@@ -241,55 +237,16 @@ export default function OnchainScorePage() {
             </Card>
           </div>
 
-          {/* Right Panel - Leaderboard & Social */}
+          {/* Right Panel - Onchain Score & Social */}
           <div className="col-span-12 lg:col-span-3 space-y-6">
+            {/* Onchain Score - Moved to right side */}
+            <OnchainScoreCard />
+
             {/* Leaderboard */}
             <Leaderboard />
 
-            {/* Next Level Progress */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lavender flex items-center">
-                  <Flame className="w-5 h-5 mr-2" />
-                  Next Level
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-amber">DeFi Master</div>
-                  <div className="text-sm text-neutral/70">Unlock at 1,200 points</div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-neutral/70">Progress</span>
-                    <span className="text-amber font-medium">840 / 1,200</span>
-                  </div>
-                  <div className="w-full bg-white/10 rounded-full h-3">
-                    <div
-                      className="h-3 bg-gradient-to-r from-mint to-amber rounded-full transition-all duration-1000"
-                      style={{ width: "70%" }}
-                    />
-                  </div>
-                  <div className="text-center text-sm text-neutral/60">360 points to go</div>
-                </div>
-
-                <Separator className="bg-white/10" />
-
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-neutral/80">Unlock Benefits:</div>
-                  <ul className="text-xs text-neutral/60 space-y-1">
-                    <li>• 2x multiplier on DeFi activities</li>
-                    <li>• Exclusive badge and profile frame</li>
-                    <li>• Access to premium analytics</li>
-                    <li>• Priority support</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Quick Stats */}
-            <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+            <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-neutral/80 text-sm">Quick Stats</CardTitle>
               </CardHeader>

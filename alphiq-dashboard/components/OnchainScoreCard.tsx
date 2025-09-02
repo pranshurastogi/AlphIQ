@@ -22,7 +22,7 @@ export function OnchainScoreCard() {
   )
 
   return (
-    <Card className="bg-card/50 border-white/10 backdrop-blur-sm">
+    <Card className="bg-card/50 border-amber/20 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-mint flex items-center">
           <Trophy className="w-5 h-5 mr-2" />
