@@ -83,7 +83,13 @@ function getUrlPreview(url: string) {
 
 interface QuestSubmissionProps {
   quest: Quest
-  onSubmit: (submissionData: { proofUrl: string; participationData: ParticipationData }) => Promise<boolean>
+  onSubmit: (submissionData: { 
+    proofUrl: string; 
+    participationData: ParticipationData;
+    participantName?: string;
+    participantEmail?: string;
+    participantAddress?: string;
+  }) => Promise<boolean>
   onCancel: () => void
   submitting: boolean
 }
@@ -95,6 +101,9 @@ export default function QuestSubmission({
   submitting 
 }: QuestSubmissionProps) {
   const [proofUrl, setProofUrl] = useState('')
+  const [participantName, setParticipantName] = useState('')
+  const [participantEmail, setParticipantEmail] = useState('')
+  const [participantAddress, setParticipantAddress] = useState('')
   const [participationData, setParticipationData] = useState<ParticipationData>({})
   const [error, setError] = useState<string | null>(null)
   const [showPreview, setShowPreview] = useState(false)
@@ -110,15 +119,26 @@ export default function QuestSubmission({
       setError('Please provide a valid URL for proof.')
       return
     }
+
+    if (!participantName.trim()) {
+      setError('Please provide your name or alias.')
+      return
+    }
     
     setError(null)
     const success = await onSubmit({
       proofUrl: proofUrl.trim(),
-      participationData
+      participationData,
+      participantName: participantName.trim(),
+      participantEmail: participantEmail.trim(),
+      participantAddress: participantAddress.trim()
     })
     
     if (success) {
       setProofUrl('')
+      setParticipantName('')
+      setParticipantEmail('')
+      setParticipantAddress('')
       setParticipationData({})
       setActiveTab('transaction')
     }
@@ -159,11 +179,14 @@ export default function QuestSubmission({
   const resetForm = () => {
     setError(null)
     setProofUrl('')
+    setParticipantName('')
+    setParticipantEmail('')
+    setParticipantAddress('')
     setParticipationData({})
     setActiveTab('transaction')
   }
 
-  const isSubmitDisabled = !proofUrl.trim() || !isValidUrl(proofUrl.trim()) || submitting
+  const isSubmitDisabled = !proofUrl.trim() || !isValidUrl(proofUrl.trim()) || !participantName.trim() || submitting
 
   return (
     <Dialog open={true} onOpenChange={() => onCancel()}>
@@ -259,6 +282,72 @@ export default function QuestSubmission({
                 )}
               </div>
             )}
+          </div>
+
+          {/* Participant Information */}
+          <div className="space-y-4">
+            <Label className="text-sm font-medium text-neutral flex items-center gap-2">
+              Participant Information
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="w-4 h-4 text-neutral/50" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-sm">Help us identify you for the quest submission</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </Label>
+            
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-neutral">
+                  Name or Alias <span className="text-amber">*</span>
+                </Label>
+                <Input
+                  placeholder="Your name or @username"
+                  value={participantName}
+                  onChange={e => setParticipantName(e.target.value)}
+                  className="bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-neutral">
+                  Email
+                </Label>
+                <Input
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={participantEmail}
+                  onChange={e => setParticipantEmail(e.target.value)}
+                  className="bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-neutral flex items-center gap-2">
+                Wallet Address
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="w-4 h-4 text-neutral/50" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-sm">Optional but recommended for verification</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </Label>
+              <Input
+                placeholder="0x..."
+                value={participantAddress}
+                onChange={e => setParticipantAddress(e.target.value)}
+                className="bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20"
+              />
+            </div>
           </div>
 
           {/* Additional Data Tabs */}

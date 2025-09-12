@@ -132,9 +132,20 @@ export function useQuest(questId?: number) {
     loadQuest()
   }, [questId, userAddress])
 
-  const submitQuest = async (submissionData: { proofUrl: string; participationData: any }): Promise<boolean> => {
+  const submitQuest = async (submissionData: { 
+    proofUrl: string; 
+    participationData: any;
+    participantName?: string;
+    participantEmail?: string;
+    participantAddress?: string;
+  }): Promise<boolean> => {
     if (!userAddress || !questId) {
       setError('Wallet not connected')
+      return false
+    }
+
+    if (!submissionData.participantName?.trim()) {
+      setError('Please provide your name or alias.')
       return false
     }
 
@@ -144,18 +155,28 @@ export function useQuest(questId?: number) {
     try {
       const submissionPayload: any = {
         quest_id: questId,
-        user_address: userAddress,
+        user_address: submissionData.participantAddress?.trim() || userAddress,
         proof_url: submissionData.proofUrl,
         status: 'pending',
       }
 
+      // Add participant information to proof_data
+      const enhancedParticipationData = {
+        ...submissionData.participationData,
+        participant_info: {
+          name: submissionData.participantName?.trim() || null,
+          email: submissionData.participantEmail?.trim() || null,
+          address: submissionData.participantAddress?.trim() || userAddress || null,
+        }
+      }
+
       // Only include proof_data if there's actual data
-      const hasData = Object.values(submissionData.participationData).some(section => 
+      const hasData = Object.values(enhancedParticipationData).some(section => 
         section && typeof section === 'object' && Object.keys(section).length > 0
       )
 
       if (hasData) {
-        submissionPayload.proof_data = submissionData.participationData
+        submissionPayload.proof_data = enhancedParticipationData
       }
 
       const { data: newSub, error: submissionError } = await supabase

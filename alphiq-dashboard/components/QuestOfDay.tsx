@@ -321,6 +321,9 @@ export function QuestOfDay() {
   const [error, setError] = useState<string | null>(null)
   const [openForm, setOpenForm] = useState<number | null>(null)
   const [proofUrl, setProofUrl] = useState('')
+  const [participantName, setParticipantName] = useState('')
+  const [participantEmail, setParticipantEmail] = useState('')
+  const [participantAddress, setParticipantAddress] = useState('')
   const [participationData, setParticipationData] = useState<ParticipationData>({})
   const [submitting, setSubmitting] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
@@ -395,6 +398,11 @@ export function QuestOfDay() {
       setError('Please provide a valid URL for proof.')
       return
     }
+
+    if (!participantName.trim()) {
+      setError('Please provide your name or alias.')
+      return
+    }
     
     setSubmitting(true)
     setError(null)
@@ -402,17 +410,27 @@ export function QuestOfDay() {
     try {
       const submissionData: any = {
         quest_id: questId,
-        user_address: userAddress,
+        user_address: participantAddress.trim() || userAddress,
         proof_url: proofUrl.trim(),
       }
 
+      // Add participant information to proof_data
+      const enhancedParticipationData = {
+        ...participationData,
+        participant_info: {
+          name: participantName.trim() || null,
+          email: participantEmail.trim() || null,
+          address: participantAddress.trim() || userAddress || null,
+        }
+      }
+
       // Only include proof_data if there's actual data
-      const hasData = Object.values(participationData).some(section => 
+      const hasData = Object.values(enhancedParticipationData).some(section => 
         section && typeof section === 'object' && Object.keys(section).length > 0
       )
 
       if (hasData) {
-        submissionData.proof_data = participationData
+        submissionData.proof_data = enhancedParticipationData
       }
 
       const { data: newSub, error: subErr } = await supabase
@@ -425,6 +443,9 @@ export function QuestOfDay() {
       setSubs(prev => ({ ...prev, [questId]: newSub! }))
       setOpenForm(null)
       setProofUrl('')
+      setParticipantName('')
+      setParticipantEmail('')
+      setParticipantAddress('')
       setParticipationData({})
       setActiveTab('transaction')
     } catch (e: any) {
@@ -470,14 +491,24 @@ export function QuestOfDay() {
     setOpenForm(null)
     setError(null)
     setProofUrl('')
+    setParticipantName('')
+    setParticipantEmail('')
+    setParticipantAddress('')
     setParticipationData({})
     setActiveTab('transaction')
+  }
+
+  // Helper function to check if quest is expired
+  const isQuestExpired = (quest: Quest) => {
+    if (!quest.end_at) return false
+    return new Date(quest.end_at) < new Date()
   }
 
   // Filter and sort quests
   const getFilteredAndSortedQuests = () => {
     return quests
       .filter(q => {
+        const isExpired = isQuestExpired(q)
         const matchText = (q.title + ' ' + q.description).toLowerCase().includes(searchQuery.toLowerCase())
         const matchCategory = selectedCategory === 'all' || q.category_name === selectedCategory
         const matchPartner = selectedPartner === 'all' || q.partner_name === selectedPartner
@@ -489,9 +520,21 @@ export function QuestOfDay() {
           if (selectedStatus === 'approved') return submission?.status === 'approved'
           if (selectedStatus === 'pending') return submission?.status === 'pending'
           if (selectedStatus === 'rejected') return submission?.status === 'rejected'
+          if (selectedStatus === 'expired') return isExpired
+          if (selectedStatus === 'active') return !isExpired
           return true
         })()
-        return matchText && matchCategory && matchPartner && matchStatus
+        
+        // By default, hide expired quests unless specifically filtering for them
+        const showExpired = selectedStatus === 'expired'
+        const showActive = selectedStatus === 'active' || selectedStatus === 'all' || 
+                          selectedStatus === 'not_submitted' || selectedStatus === 'submitted' || 
+                          selectedStatus === 'approved' || selectedStatus === 'pending' || 
+                          selectedStatus === 'rejected'
+        
+        const matchExpiry = showExpired ? isExpired : (showActive ? !isExpired : true)
+        
+        return matchText && matchCategory && matchPartner && matchStatus && matchExpiry
       })
       .sort((a, b) => {
         if (sortBy === 'xp_high') return b.xp_reward - a.xp_reward
@@ -645,12 +688,14 @@ export function QuestOfDay() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent className="bg-card/95 border-white/10">
-                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="all">All Active Quests</SelectItem>
+                <SelectItem value="active">Active Only</SelectItem>
                 <SelectItem value="not_submitted">Not Submitted</SelectItem>
                 <SelectItem value="submitted">Submitted</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="expired">Expired Quests</SelectItem>
               </SelectContent>
             </Select>
             
@@ -675,6 +720,7 @@ export function QuestOfDay() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {displayedQuests.map(quest => {
           const sub = subs[quest.id]
+          const isExpired = isQuestExpired(quest)
           const start = new Date(quest.start_at).toLocaleDateString(undefined, {
             month: 'short', day: 'numeric', year: 'numeric'
           })
@@ -687,7 +733,9 @@ export function QuestOfDay() {
           return (
             <Card
               key={quest.id}
-              className="bg-card/20 border-white/10 backdrop-blur-sm hover:bg-card/30 transition-all duration-200 group"
+              className={`bg-card/20 border-white/10 backdrop-blur-sm hover:bg-card/30 transition-all duration-200 group ${
+                isExpired && selectedStatus === 'expired' ? 'opacity-75 border-red/20' : ''
+              }`}
             >
               <CardHeader className="pb-4">
                 {/* Icon and Title */}
@@ -701,11 +749,16 @@ export function QuestOfDay() {
                   </div>
                 </div>
                 
-                {/* XP Badge */}
+                {/* XP Badge and Status */}
                 <div className="flex items-center justify-between">
                   <Badge className="bg-orange-500/20 backdrop-blur-sm border border-orange-400/30 text-orange-300 shadow-lg px-3 py-1.5">
                     <Zap className="w-3 h-3 mr-1" /> +{quest.xp_reward} XP
                   </Badge>
+                  {isExpired && selectedStatus === 'expired' && (
+                    <Badge className="bg-red/20 backdrop-blur-sm border border-red/30 text-red-300 shadow-lg px-3 py-1.5">
+                      <XCircle className="w-3 h-3 mr-1" /> Expired
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
 
@@ -821,6 +874,77 @@ export function QuestOfDay() {
                           )}
                         </div>
                       )}
+                    </div>
+
+                    {/* Participant Information */}
+                    <div className="space-y-4">
+                      <div className="text-sm font-medium text-neutral flex items-center gap-2">
+                        Participant Information
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="w-4 h-4 text-neutral/50" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-sm">Help us identify you for the quest submission</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-neutral">
+                            Name or Alias <span className="text-amber">*</span>
+                          </label>
+                          <Input
+                            placeholder="Your name or @username"
+                            value={participantName}
+                            onChange={e => setParticipantName(e.target.value)}
+                            className="bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-neutral">
+                            Email
+                          </label>
+                          <Input
+                            type="email"
+                            placeholder="your.email@example.com"
+                            value={participantEmail}
+                            onChange={e => setParticipantEmail(e.target.value)}
+                            className="bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-neutral flex items-center gap-2">
+                          Wallet Address
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Info className="w-4 h-4 text-neutral/50" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-sm">Optional but recommended for verification. If not provided, we'll use your connected wallet.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                      </label>
+                        <Input
+                          placeholder={userAddress || "0x..."}
+                          value={participantAddress}
+                          onChange={e => setParticipantAddress(e.target.value)}
+                          className="bg-background/50 border-white/20 focus:border-amber/50 focus:ring-amber/20"
+                        />
+                        {userAddress && !participantAddress && (
+                          <p className="text-xs text-amber/70">
+                            Using connected wallet: {userAddress.slice(0, 6)}...{userAddress.slice(-4)}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Additional Data Tabs */}
@@ -994,7 +1118,7 @@ export function QuestOfDay() {
                     <div className="flex space-x-2 pt-2">
                       <Button
                         onClick={() => handleSubmit(quest.id)}
-                        disabled={submitting || !proofUrl.trim() || !isValidUrl(proofUrl.trim())}
+                        disabled={submitting || !proofUrl.trim() || !isValidUrl(proofUrl.trim()) || !participantName.trim()}
                         className="flex-1 bg-amber hover:bg-amber/80 text-charcoal"
                       >
                         {submitting ? (
@@ -1018,7 +1142,7 @@ export function QuestOfDay() {
                       </Button>
                     </div>
                   </div>
-                ) : (
+                ) : !isExpired ? (
                   <Button
                     onClick={() => {
                       setOpenForm(quest.id)
@@ -1029,6 +1153,16 @@ export function QuestOfDay() {
                     <Target className="w-4 h-4 mr-2" />
                     Participate Now
                   </Button>
+                ) : (
+                  <div className="w-full p-3 bg-red/10 border border-red/20 rounded-lg text-center">
+                    <p className="text-sm text-red/80 font-medium">
+                      <XCircle className="w-4 h-4 inline mr-2" />
+                      Quest has expired
+                    </p>
+                    <p className="text-xs text-red/60 mt-1">
+                      This quest ended on {end}
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>
