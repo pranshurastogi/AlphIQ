@@ -96,3 +96,21 @@
 .pulse-glow {
   animation: pulse-glow 3s ease-in-out infinite;
 }
+
+/* Custom scrollbar for emoji picker */
+.emoji-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.emoji-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.emoji-scroll::-webkit-scrollbar-thumb {
+  background: #FF8A65;
+  border-radius: 3px;
+}
+
+.emoji-scroll::-webkit-scrollbar-thumb:hover {
+  background: #FF7043;
+}
