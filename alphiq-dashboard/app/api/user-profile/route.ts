@@ -206,6 +206,126 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Get current profile to check for changes
+    const { data: currentProfile, error: currentProfileError } = await supabase
+      .from('user_info')
+      .select('username, emoji')
+      .eq('user_id', userId)
+      .single()
+
+    // Check if username or emoji has changed
+    const usernameChanged = username && username !== (currentProfile?.username || '')
+    const emojiChanged = emoji && emoji !== (currentProfile?.emoji || '')
+    
+    // If username or emoji changed, validate XP cost
+    if (usernameChanged || emojiChanged) {
+      const hasExistingUsername = currentProfile?.username && currentProfile.username.trim() !== ''
+      const hasExistingEmoji = currentProfile?.emoji && currentProfile.emoji.trim() !== ''
+      
+      let xpCost = 0
+      let reason = ''
+      let featureValue = ''
+
+      if (!hasExistingUsername && !hasExistingEmoji) {
+        // First time setting username or emoji - 100 XP
+        xpCost = 100
+        reason = 'Initial profile setup'
+        featureValue = 'username_emoji_setup'
+      } else if (hasExistingUsername || hasExistingEmoji) {
+        // Updating existing username or emoji - 500 XP
+        xpCost = 500
+        reason = 'Profile update'
+        featureValue = 'username_emoji_update'
+      }
+
+      if (xpCost > 0) {
+        // Get user's current XP
+        const { data: userXP, error: userXPError } = await supabase
+          .from('users')
+          .select('admin_total_xp')
+          .eq('address', address)
+          .single()
+
+        if (userXPError) {
+          safeLog('error', '❌ Error fetching user XP:', userXPError)
+          return NextResponse.json(
+            { error: 'Failed to verify user XP' },
+            { status: 500 }
+          )
+        }
+
+        const currentXP = userXP.admin_total_xp || 0
+
+        if (currentXP < xpCost) {
+          return NextResponse.json(
+            { 
+              error: 'Insufficient XP',
+              details: `You need ${xpCost} XP to update your profile, but you only have ${currentXP} XP`
+            },
+            { status: 400 }
+          )
+        }
+
+        // Spend XP by creating spending record and updating user XP
+        try {
+          // Create spending record
+          const { data: spendingRecord, error: spendingError } = await supabase
+            .from('admin_user_xp_spending')
+            .insert({
+              user_address: address,
+              xp_spent: xpCost,
+              reason: reason,
+              feature_value: featureValue
+            })
+            .select()
+            .single()
+
+          if (spendingError) {
+            safeLog('error', '❌ Error creating spending record:', spendingError)
+            return NextResponse.json(
+              { error: 'Failed to record XP spending' },
+              { status: 500 }
+            )
+          }
+
+          // Update user's XP
+          const newXP = currentXP - xpCost
+          const { error: updateXPError } = await supabase
+            .from('users')
+            .update({ admin_total_xp: newXP })
+            .eq('address', address)
+
+          if (updateXPError) {
+            safeLog('error', '❌ Error updating user XP:', updateXPError)
+            // Try to rollback the spending record
+            await supabase
+              .from('admin_user_xp_spending')
+              .delete()
+              .eq('id', spendingRecord.id)
+            
+            return NextResponse.json(
+              { error: 'Failed to update user XP' },
+              { status: 500 }
+            )
+          }
+
+          safeLog('log', '✅ XP spending successful:', {
+            address,
+            xpSpent: xpCost,
+            newXP,
+            spendingRecordId: spendingRecord.id
+          })
+
+        } catch (xpError) {
+          safeLog('error', '❌ XP spending error:', xpError)
+          return NextResponse.json(
+            { error: 'Failed to process XP spending' },
+            { status: 500 }
+          )
+        }
+      }
+    }
+
     // Prepare profile data
     const profileData = {
       user_id: userId,

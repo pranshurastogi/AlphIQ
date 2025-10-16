@@ -7,6 +7,8 @@ import { ANSDisplay } from './ANSDisplay'
 import { useANS } from '@/hooks/useANS'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { UserProfileUpdateModal } from './UserProfileUpdateModal'
+import { ProfileDropdown } from './ProfileDropdown'
+import { UserPlus } from 'lucide-react'
 
 interface WalletConnectWithANSProps {
   variant?: 'desktop' | 'mobile'
@@ -16,8 +18,11 @@ export function WalletConnectWithANS({ variant = 'desktop' }: WalletConnectWithA
   const { account } = useWallet()
   const address = typeof account === 'string' ? account : account?.address
   const { ansName, hasANS } = useANS(address)
-  const { needsUpdate, userId, isLoading, error } = useUserProfile(address)
+  const { needsUpdate, userId, isLoading, error, profile, hasProfile } = useUserProfile(address)
   const [showProfileModal, setShowProfileModal] = useState(false)
+
+  // Check if user has a username
+  const hasUsername = hasProfile && profile?.username
 
   // Show profile update modal when user connects and needs to update profile
   useEffect(() => {
@@ -74,18 +79,35 @@ export function WalletConnectWithANS({ variant = 'desktop' }: WalletConnectWithA
     return (
       <>
         <div className="flex items-center justify-between w-full">
-          {address && hasANS ? (
-            // Mobile: Show ANS profile with wallet connection below
+          {address && userId ? (
+            // Mobile: Show profile dropdown with wallet connection
             <div className="w-full space-y-3">
-              <div className="glass-effect px-4 py-3 rounded-lg border border-amber/30">
-                <ANSDisplay address={address} size="md" showAddress={true} />
-              </div>
+              {hasUsername ? (
+                <div className="glass-effect px-4 py-3 rounded-lg border border-amber/30">
+                  <ProfileDropdown 
+                    address={address} 
+                    userId={userId} 
+                    variant="mobile" 
+                  />
+                </div>
+              ) : (
+                // Show small icon for users without username
+                <div className="glass-effect px-4 py-3 rounded-lg border border-amber/30 flex items-center justify-center">
+                  <button
+                    onClick={() => setShowProfileModal(true)}
+                    className="flex items-center space-x-2 text-neutral/60 hover:text-amber transition-colors"
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    <span className="text-sm">Get Username</span>
+                  </button>
+                </div>
+              )}
               <div className="glass-effect px-4 py-2 rounded-lg border border-amber/30">
                 <AlephiumConnectButton />
               </div>
             </div>
           ) : (
-            // Mobile: Show just wallet connect button when no ANS
+            // Mobile: Show just wallet connect button when no profile
             <div className="w-full">
               <div className="glass-effect px-4 py-2 rounded-lg border border-amber/30">
                 <AlephiumConnectButton />
@@ -112,17 +134,32 @@ export function WalletConnectWithANS({ variant = 'desktop' }: WalletConnectWithA
   return (
     <>
       <div className="flex items-center">
-        {address && hasANS ? (
-          // Desktop: Show ANS profile with wallet connection integrated
+        {address && userId ? (
+          // Desktop: Show profile dropdown with wallet connection integrated
           <div className="glass-effect hover:glass-hover text-neutral font-medium flex items-center px-4 py-2 rounded-lg border border-amber/30 transition-all duration-300">
             <div className="flex items-center space-x-3">
-              <ANSDisplay address={address} size="sm" showAddress={false} />
+              {hasUsername ? (
+                <ProfileDropdown 
+                  address={address} 
+                  userId={userId} 
+                  variant="desktop" 
+                />
+              ) : (
+                // Show small icon for users without username
+                <button
+                  onClick={() => setShowProfileModal(true)}
+                  className="flex items-center space-x-2 text-neutral/60 hover:text-amber transition-colors px-2 py-1 rounded"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span className="text-sm">Get Username</span>
+                </button>
+              )}
               <div className="w-px h-6 bg-amber/30" />
               <AlephiumConnectButton />
             </div>
           </div>
         ) : (
-          // Desktop: Show just wallet connect button when no ANS
+          // Desktop: Show just wallet connect button when no profile
           <div className="glass-effect hover:glass-hover text-neutral font-medium flex items-center px-4 py-2 rounded-lg border border-amber/30 transition-all duration-300">
             <AlephiumConnectButton />
           </div>

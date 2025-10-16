@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, User, Smile, Globe, Github, Twitter, MessageCircle, Hash, Check, X, Sparkles, Star, Zap, UserPlus, Edit3, Link2, AtSign } from 'lucide-react'
+import { Loader2, User, Smile, Globe, Github, Twitter, MessageCircle, Hash, Check, X, Sparkles, Star, Zap, UserPlus, Edit3, Link2, AtSign, Coins, AlertTriangle } from 'lucide-react'
 import { validateProfile, type ProfileValidationResult } from '@/lib/profileValidation'
 import { useUsernameValidation } from '@/hooks/useUsernameValidation'
 import { EmojiPicker } from './EmojiPicker'
@@ -35,6 +35,18 @@ interface UserProfileUpdateModalProps {
   onDismissPermanently?: () => void
 }
 
+interface XPValidationResult {
+  success: boolean
+  canProceed: boolean
+  xpCost: number
+  currentXP: number
+  error?: string
+  details?: string
+  requiredXP?: number
+  shortfall?: number
+  message?: string
+}
+
 export function UserProfileUpdateModal({ 
   isOpen, 
   onClose, 
@@ -44,6 +56,7 @@ export function UserProfileUpdateModal({
   onDismissPermanently
 }: UserProfileUpdateModalProps) {
   const [profile, setProfile] = useState<UserProfile>({})
+  const [originalProfile, setOriginalProfile] = useState<UserProfile>({})
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,16 +64,21 @@ export function UserProfileUpdateModal({
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [currentStep, setCurrentStep] = useState(1)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [xpValidation, setXpValidation] = useState<XPValidationResult | null>(null)
+  const [isValidatingXP, setIsValidatingXP] = useState(false)
+  const [showXPConfirmation, setShowXPConfirmation] = useState(false)
+  const [currentXP, setCurrentXP] = useState(0)
   
   // Username validation
   const usernameValidation = useUsernameValidation(profile.username || '', userId)
 
-  // Load existing profile data
+  // Load existing profile data and XP
   useEffect(() => {
     if (isOpen && userId) {
       loadProfile()
+      loadCurrentXP()
     }
-  }, [isOpen, userId])
+  }, [isOpen, userId, address])
 
   const loadProfile = async () => {
     try {
@@ -73,12 +91,66 @@ export function UserProfileUpdateModal({
       }
       
       const data = await response.json()
-      setProfile(data.profile || {})
+      const profileData = data.profile || {}
+      setProfile(profileData)
+      setOriginalProfile(profileData)
     } catch (err) {
       console.error('Error loading profile:', err)
       setError('Failed to load profile data')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Load current XP
+  const loadCurrentXP = async () => {
+    try {
+      const response = await fetch(`/api/user-profile/xp-validation?address=${address}`)
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentXP(data.currentXP || 0)
+      }
+    } catch (err) {
+      console.error('Error loading current XP:', err)
+    }
+  }
+
+  // Validate XP cost for changes
+  const validateXP = async () => {
+    try {
+      setIsValidatingXP(true)
+      setXpValidation(null)
+      
+      const response = await fetch('/api/user-profile/xp-validation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userAddress: address,
+          currentUsername: originalProfile.username,
+          currentEmoji: originalProfile.emoji,
+          newUsername: profile.username,
+          newEmoji: profile.emoji
+        }),
+      })
+
+      const data = await response.json()
+      setXpValidation(data)
+      
+      if (data.success && data.canProceed) {
+        if (data.xpCost > 0) {
+          setShowXPConfirmation(true)
+        } else {
+          // No XP cost, proceed directly
+          handleSave()
+        }
+      }
+    } catch (err) {
+      console.error('Error validating XP:', err)
+      setError('Failed to validate XP cost')
+    } finally {
+      setIsValidatingXP(false)
     }
   }
 
@@ -125,6 +197,25 @@ export function UserProfileUpdateModal({
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleSaveClick = () => {
+    // Check if username or emoji has changed
+    const usernameChanged = profile.username !== originalProfile.username
+    const emojiChanged = profile.emoji !== originalProfile.emoji
+    
+    if (usernameChanged || emojiChanged) {
+      // Validate XP before saving
+      validateXP()
+    } else {
+      // No username/emoji changes, save directly
+      handleSave()
+    }
+  }
+
+  const handleXPConfirmation = () => {
+    setShowXPConfirmation(false)
+    handleSave()
   }
 
   const handleInputChange = (field: keyof UserProfile, value: string) => {
@@ -392,18 +483,69 @@ export function UserProfileUpdateModal({
               </div>
             </div>
 
+            {/* XP Cost Information */}
+            {xpValidation && !xpValidation.canProceed && (
+              <Alert variant="destructive" className="glass-card border-red-500/30">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="text-red-400">
+                  <div className="space-y-2">
+                    <p className="font-semibold">{xpValidation.error}</p>
+                    <p>{xpValidation.details}</p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Coins className="w-4 h-4" />
+                      <span>Current XP: {currentXP}</span>
+                      <span>•</span>
+                      <span>Required: {xpValidation.requiredXP}</span>
+                      <span>•</span>
+                      <span>Shortfall: {xpValidation.shortfall}</span>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* XP Cost Display */}
+            {xpValidation && xpValidation.canProceed && xpValidation.xpCost > 0 && (
+              <Alert className="glass-card border-amber/30 bg-amber/5">
+                <Coins className="h-4 w-4 text-amber" />
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <p className="font-semibold text-amber">
+                      Profile Update Cost: {xpValidation.xpCost} XP
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {xpValidation.xpCost === 100 
+                        ? "First time setting username/emoji costs 100 XP"
+                        : "Updating existing username/emoji costs 500 XP"
+                      }
+                    </p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span>Current XP: {currentXP}</span>
+                      <span>•</span>
+                      <span>After update: {currentXP - xpValidation.xpCost}</span>
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Action Buttons */}
             <div className="glass-card rounded-xl p-5">
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
-                  onClick={handleSave}
-                  disabled={isSaving || !usernameValidation.isValid}
+                  onClick={handleSaveClick}
+                  disabled={isSaving || isValidatingXP || !usernameValidation.isValid}
                   className="flex-1 bg-amber hover:bg-amber/90 text-charcoal font-semibold py-2.5 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Saving...
+                    </>
+                  ) : isValidatingXP ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Validating XP...
                     </>
                   ) : (
                     <>
@@ -415,7 +557,7 @@ export function UserProfileUpdateModal({
                 <Button
                   variant="outline"
                   onClick={handleSkip}
-                  disabled={isSaving}
+                  disabled={isSaving || isValidatingXP}
                   className="flex-1 border-amber/30 hover:border-amber/50 text-neutral font-semibold py-2.5 rounded-lg hover:bg-amber/10 transition-all duration-200"
                 >
                   Skip for Now
@@ -440,4 +582,76 @@ export function UserProfileUpdateModal({
       </DialogContent>
     </Dialog>
   )
+
+  // XP Confirmation Dialog
+  if (showXPConfirmation && xpValidation) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md glass-effect">
+          <DialogHeader className="text-center pb-4">
+            <div className="relative mb-3">
+              <div className="w-12 h-12 bg-amber/20 rounded-full flex items-center justify-center mx-auto pulse-glow">
+                <Coins className="w-6 h-6 text-amber" />
+              </div>
+            </div>
+            <DialogTitle className="text-2xl font-semibold text-neutral">
+              Confirm XP Spending
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground mt-1">
+              This profile update will cost you XP
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Alert className="glass-card border-amber/30 bg-amber/5">
+              <Coins className="h-4 w-4 text-amber" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <p className="font-semibold text-amber">
+                    Cost: {xpValidation?.xpCost} XP
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {xpValidation?.xpCost === 100 
+                      ? "First time setting username/emoji"
+                      : "Updating existing username/emoji"
+                    }
+                  </p>
+                </div>
+              </AlertDescription>
+            </Alert>
+
+            <div className="glass-card rounded-xl p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Current XP:</span>
+                <span className="font-semibold">{currentXP}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-2">
+                <span className="text-muted-foreground">After update:</span>
+                <span className="font-semibold text-amber">
+                  {currentXP - (xpValidation?.xpCost || 0)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={handleXPConfirmation}
+                className="flex-1 bg-amber hover:bg-amber/90 text-charcoal font-semibold py-2.5 rounded-lg transition-all duration-200"
+              >
+                <Coins className="w-4 h-4 mr-2" />
+                Confirm & Spend XP
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowXPConfirmation(false)}
+                className="flex-1 border-amber/30 hover:border-amber/50 text-neutral font-semibold py-2.5 rounded-lg hover:bg-amber/10 transition-all duration-200"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 }
