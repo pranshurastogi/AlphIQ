@@ -46,19 +46,10 @@ export type AnalyticsData = {
 }
 
 export function useAdvancedTokenDistribution() {
-  const RICHLIST_API = 'https://api-richlist.alephium.notrustverify.ch'
-  
-  // Fallback endpoints
-  const SUPPLY_ENDPOINTS = [
-    'https://api.alephium.org/infos/supply/total-alph',
-    'https://backend.mainnet.alephium.org/infos/supply/total-alph',
-    'https://api-richlist.alephium.notrustverify.ch/supply'
-  ]
-  
-  const PRICE_ENDPOINTS = [
-    'https://api.coingecko.com/api/v3/simple/price?ids=alephium&vs_currencies=usd',
-    'https://api.coinpaprika.com/v1/tickers/alph-alephium'
-  ]
+  // Use internal API routes instead of direct external calls
+  const RICHLIST_API = '/api/richlist'
+  const SUPPLY_API = '/api/supply'
+  const PRICE_API = '/api/price'
   
   const fetcher = async (url: string) => {
     try {
@@ -71,9 +62,7 @@ export function useAdvancedTokenDistribution() {
         headers: {
           'Accept': 'application/json, text/plain, */*',
           'User-Agent': 'AlphIQ-Dashboard/1.0'
-        },
-        mode: 'cors',
-        credentials: 'omit'
+        }
       })
       
       clearTimeout(timeoutId)
@@ -92,42 +81,8 @@ export function useAdvancedTokenDistribution() {
     }
   }
 
-  // Fallback fetcher for supply data
-  const supplyFetcher = async (url: string) => {
-    for (const endpoint of SUPPLY_ENDPOINTS) {
-      try {
-        const data = await fetcher(endpoint)
-        return data
-      } catch (error) {
-        console.warn(`Failed to fetch from ${endpoint}:`, error)
-        continue
-      }
-    }
-    throw new Error('All supply endpoints failed')
-  }
-
-  // Fallback fetcher for price data
-  const priceFetcher = async (url: string) => {
-    for (const endpoint of PRICE_ENDPOINTS) {
-      try {
-        const data = await fetcher(endpoint)
-        // Normalize different API responses
-        if (endpoint.includes('coingecko')) {
-          return data
-        } else if (endpoint.includes('coinpaprika')) {
-          return { alephium: { usd: data.quotes.USD.price } }
-        }
-        return data
-      } catch (error) {
-        console.warn(`Failed to fetch from ${endpoint}:`, error)
-        continue
-      }
-    }
-    throw new Error('All price endpoints failed')
-  }
-
   const { data: richlistData, error: richlistErr, mutate: retryRichlist } = useSWR(
-    `${RICHLIST_API}/addresses?page=1&amount=50&sort=balance&order=desc&filter=nogenesis`,
+    `${RICHLIST_API}?page=1&amount=50&sort=balance&order=desc&filter=nogenesis`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -143,20 +98,20 @@ export function useAdvancedTokenDistribution() {
   )
 
   const { data: supplyData, error: supplyErr, mutate: retrySupply } = useSWR(
-    'supply-data',
-    supplyFetcher,
+    SUPPLY_API,
+    fetcher,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
       errorRetryCount: 2,
       errorRetryInterval: 3000,
-      fallbackData: 1e9 // 1B ALPH fallback
+      fallbackData: { totalAlph: 1e9 } // 1B ALPH fallback
     }
   )
 
   const { data: priceData, error: priceErr, mutate: retryPrice } = useSWR(
-    'price-data',
-    priceFetcher,
+    `${PRICE_API}?source=coingecko`,
+    fetcher,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: true,
